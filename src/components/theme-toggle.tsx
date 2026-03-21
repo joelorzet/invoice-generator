@@ -1,31 +1,36 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useSyncExternalStore } from "react";
 import { Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+function subscribe(onStoreChange: () => void) {
+  window.addEventListener("storage", onStoreChange);
+  return () => window.removeEventListener("storage", onStoreChange);
+}
+
+function getSnapshot() {
+  return localStorage.getItem("theme") ?? "dark";
+}
+
+function getServerSnapshot() {
+  return "dark";
+}
+
 export function ThemeToggle() {
-  const [isDark, setIsDark] = useState(true);
+  const theme = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const isDark = theme !== "light";
 
-  useEffect(() => {
-    const saved = localStorage.getItem("theme");
-    if (saved === "light") {
-      document.documentElement.classList.add("light");
-      setIsDark(false);
-    }
-  }, []);
-
-  const toggle = () => {
-    const next = !isDark;
-    setIsDark(next);
-    if (next) {
-      document.documentElement.classList.remove("light");
-      localStorage.setItem("theme", "dark");
-    } else {
+  const toggle = useCallback(() => {
+    if (isDark) {
       document.documentElement.classList.add("light");
       localStorage.setItem("theme", "light");
+    } else {
+      document.documentElement.classList.remove("light");
+      localStorage.setItem("theme", "dark");
     }
-  };
+    window.dispatchEvent(new StorageEvent("storage"));
+  }, [isDark]);
 
   return (
     <Button

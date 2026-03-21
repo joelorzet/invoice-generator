@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo, useRef } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -51,44 +51,45 @@ export function InvoiceHistory({
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(5);
 
-  const service = useRef<ReturnType<typeof getInvoiceService> | null>(null);
-
-  if (!service.current && typeof window !== "undefined") {
-    service.current = getInvoiceService();
-  }
-
-  const refresh = useCallback(async () => {
-    if (!service.current) return;
-    const list = await service.current.getAll();
-    setInvoices(list);
-  }, []);
-
-  useEffect(() => {
-    refresh();
-  }, [refresh, refreshKey]);
-
-  const handleDelete = useCallback(async () => {
-    if (!deleteTarget || !service.current) return;
-    await service.current.delete(deleteTarget.id);
-    setDeleteTarget(null);
-    refresh();
-  }, [deleteTarget, refresh]);
-
-  const totalPages = Math.ceil(invoices.length / pageSize);
-  const paged = useMemo(
-    () => invoices.slice(page * pageSize, (page + 1) * pageSize),
-    [invoices, page, pageSize]
+  const service = useMemo(
+    () => (typeof window !== "undefined" ? getInvoiceService() : null),
+    []
   );
 
-  // Reset to first page when page size changes or list shrinks
+  const refresh = useCallback(async () => {
+    if (!service) return;
+    const list = await service.getAll();
+    setInvoices(list);
+  }, [service]);
+
   useEffect(() => {
-    if (page >= totalPages && totalPages > 0) setPage(totalPages - 1);
-  }, [page, totalPages]);
+    let cancelled = false;
+    (async () => {
+      if (!service) return;
+      const list = await service.getAll();
+      if (!cancelled) setInvoices(list);
+    })();
+    return () => { cancelled = true; };
+  }, [service, refreshKey]);
+
+  const handleDelete = useCallback(async () => {
+    if (!deleteTarget || !service) return;
+    await service.delete(deleteTarget.id);
+    setDeleteTarget(null);
+    await refresh();
+  }, [deleteTarget, service, refresh]);
+
+  const totalPages = Math.ceil(invoices.length / pageSize);
+  const safePage = totalPages > 0 && page >= totalPages ? totalPages - 1 : page;
+  const paged = useMemo(
+    () => invoices.slice(safePage * pageSize, (safePage + 1) * pageSize),
+    [invoices, safePage, pageSize]
+  );
 
   if (invoices.length === 0) return null;
 
-  const start = page * pageSize + 1;
-  const end = Math.min((page + 1) * pageSize, invoices.length);
+  const start = safePage * pageSize + 1;
+  const end = Math.min((safePage + 1) * pageSize, invoices.length);
 
   return (
     <>
@@ -211,7 +212,7 @@ export function InvoiceHistory({
               <Button
                 variant="ghost"
                 size="icon-xs"
-                disabled={page === 0}
+                disabled={safePage === 0}
                 onClick={() => setPage((p) => p - 1)}
                 className="cursor-pointer"
                 aria-label="Previous page"
@@ -221,7 +222,7 @@ export function InvoiceHistory({
               <Button
                 variant="ghost"
                 size="icon-xs"
-                disabled={page >= totalPages - 1}
+                disabled={safePage >= totalPages - 1}
                 onClick={() => setPage((p) => p + 1)}
                 className="cursor-pointer"
                 aria-label="Next page"

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useRef, useMemo } from "react";
 import { sileo } from "sileo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -50,27 +50,22 @@ const CURRENCIES = [
 ];
 
 export function InvoiceForm() {
+  const svc = useMemo(
+    () => (typeof window !== "undefined" ? getInvoiceService() : null),
+    []
+  );
   const [invoice, setInvoice] = useState<InvoiceData>(createDefaultInvoice);
   const [editingId, setEditingId] = useState<string | undefined>(undefined);
   const [consentDialogOpen, setConsentDialogOpen] = useState(false);
-  const [storageEnabled, setStorageEnabled] = useState(false);
+  const [storageEnabled, setStorageEnabled] = useState(
+    () => !!svc?.isStorageEnabled()
+  );
+  const [consentDenied, setConsentDenied] = useState(
+    () => !!(svc && !svc.isStorageEnabled() && svc.getConsent() === "denied")
+  );
   const [historyRefresh, setHistoryRefresh] = useState(0);
   const [taxPreset, setTaxPreset] = useState("custom");
   const pendingDownload = useRef(false);
-  const serviceRef = useRef<ReturnType<typeof getInvoiceService> | null>(null);
-
-  if (!serviceRef.current && typeof window !== "undefined") {
-    serviceRef.current = getInvoiceService();
-  }
-
-  const svc = serviceRef.current;
-
-  // Check consent on mount
-  useEffect(() => {
-    if (svc?.isStorageEnabled()) {
-      setStorageEnabled(true);
-    }
-  }, []);
 
   const updateField = useCallback(
     <K extends keyof InvoiceData>(key: K, value: InvoiceData[K]) => {
@@ -201,7 +196,7 @@ export function InvoiceForm() {
         error: { title: "Generation Failed", description: "Something went wrong." },
       });
     },
-    []
+    [svc]
   );
 
   const handleDownload = useCallback(() => {
@@ -213,12 +208,13 @@ export function InvoiceForm() {
     } else {
       doDownload(invoice, editingId);
     }
-  }, [invoice, editingId, doDownload]);
+  }, [svc, invoice, editingId, doDownload]);
 
   const handleConsent = useCallback(
     (granted: boolean) => {
       svc?.setConsent(granted ? "granted" : "denied");
       setStorageEnabled(granted);
+      setConsentDenied(!granted);
       setConsentDialogOpen(false);
 
       if (pendingDownload.current) {
@@ -226,7 +222,7 @@ export function InvoiceForm() {
         doDownload(invoice, editingId);
       }
     },
-    [invoice, editingId, doDownload]
+    [svc, invoice, editingId, doDownload]
   );
 
   const handleLoadInvoice = useCallback((saved: SavedInvoice) => {
@@ -275,9 +271,10 @@ export function InvoiceForm() {
   const handleClearData = useCallback(() => {
     svc?.clearAllData();
     setStorageEnabled(false);
+    setConsentDenied(false);
     setHistoryRefresh((n) => n + 1);
     sileo.success({ title: "Data Cleared", description: "All saved invoices and preferences have been removed." });
-  }, []);
+  }, [svc]);
 
   const handleDownloadFromHistory = useCallback(
     (saved: SavedInvoice) => {
@@ -428,7 +425,7 @@ export function InvoiceForm() {
                     Clear saved data
                   </button>
                 )}
-                {!storageEnabled && svc?.getConsent() === "denied" && (
+                {!storageEnabled && consentDenied && (
                   <button
                     onClick={handleEnableStorage}
                     className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors cursor-pointer"
