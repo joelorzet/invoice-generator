@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SileoToaster } from "@/components/sileo-toaster";
-import { AnimatedDotsBg } from "@/components/animated-dots-bg";
 import "./globals.css";
 
 const jakarta = Plus_Jakarta_Sans({
@@ -123,11 +122,8 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className="min-h-full flex flex-col relative">
-        <AnimatedDotsBg />
-        <div className="relative z-10 flex flex-col min-h-full">
-          {children}
-        </div>
+      <body className="min-h-full flex flex-col">
+        {children}
         <Analytics />
         <SileoToaster />
       </body>
