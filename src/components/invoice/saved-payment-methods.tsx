@@ -293,6 +293,7 @@ export function SavedPaymentMethods({ refreshKey, onUse }: SavedPaymentMethodsPr
                     <Field label="Currency" value={crypto.currency} onChange={(v) => updateData("currency", v)} placeholder="e.g. USDT, XLM, XRP" />
                   </div>
                   <Field label="Wallet Address" value={crypto.address} onChange={(v) => updateData("address", v)} placeholder="0x..." />
+                  <Field label="Token Contract (optional)" value={crypto.contract || ""} onChange={(v) => updateData("contract", v)} placeholder="e.g. 0xa0b8...9e8 or native" />
                   <Field label={`${getMemoLabel(crypto.network)} (optional)`} value={crypto.memo || ""} onChange={(v) => updateData("memo", v)} />
                 </>
               );

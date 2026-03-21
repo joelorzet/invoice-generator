@@ -47,6 +47,12 @@ function CryptoDetails({ payment }: { payment: CryptoPayment }) {
         </p>
       )}
       <PaymentField label="Currency" value={payment.currency} />
+      {payment.contract && (
+        <p className="break-all">
+          <span className="font-semibold">Contract: </span>
+          {payment.contract}
+        </p>
+      )}
       <PaymentField label="Memo / Tag" value={payment.memo} />
     </>
   );

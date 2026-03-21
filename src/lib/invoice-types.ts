@@ -44,6 +44,7 @@ export interface CryptoPayment {
   network: string;
   address: string;
   currency: string;
+  contract?: string;
   memo?: string;
 }
 

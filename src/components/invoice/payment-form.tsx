@@ -225,6 +225,7 @@ function CryptoForm({
         <Field label="Currency" value={payment.currency} onChange={(v) => onUpdate("currency", v)} placeholder="e.g. USDT, XLM, XRP" />
       </div>
       <Field label="Wallet Address" value={payment.address} onChange={(v) => onUpdate("address", v)} placeholder="0x..." />
+      <Field label="Token Contract (optional)" value={payment.contract || ""} onChange={(v) => onUpdate("contract", v)} placeholder="e.g. 0xa0b8...9e8 or native" />
       <Field label={`${getMemoLabel(payment.network)} (optional)`} value={payment.memo || ""} onChange={(v) => onUpdate("memo", v)} placeholder="Required for Stellar, XRP, EOS, Cosmos, BNB" />
     </>
   );
