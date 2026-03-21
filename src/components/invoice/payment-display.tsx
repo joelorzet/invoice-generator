@@ -46,13 +46,10 @@ function CryptoDetails({ payment }: { payment: CryptoPayment }) {
           {payment.address}
         </p>
       )}
-      <PaymentField label="Currency" value={payment.currency} />
-      {payment.contract && (
-        <p className="break-all">
-          <span className="font-semibold">Contract: </span>
-          {payment.contract}
-        </p>
-      )}
+      <PaymentField
+        label="Currency"
+        value={payment.contract ? `${payment.currency} - ${payment.contract}` : payment.currency}
+      />
       <PaymentField label="Memo / Tag" value={payment.memo} />
     </>
   );

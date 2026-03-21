@@ -301,10 +301,12 @@ export function generateInvoicePDF(data: InvoiceData): jsPDF {
           lines.push({ label: "Network", value: payment.network });
         if (payment.address)
           lines.push({ label: "Wallet", value: payment.address });
-        if (payment.currency)
-          lines.push({ label: "Currency", value: payment.currency });
-        if (payment.contract)
-          lines.push({ label: "Contract", value: payment.contract });
+        if (payment.currency) {
+          const currencyValue = payment.contract
+            ? `${payment.currency} - ${payment.contract}`
+            : payment.currency;
+          lines.push({ label: "Currency", value: currencyValue });
+        }
         if (payment.memo)
           lines.push({ label: "Memo / Tag", value: payment.memo });
       }
