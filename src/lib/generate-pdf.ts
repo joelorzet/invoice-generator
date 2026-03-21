@@ -92,6 +92,7 @@ export function generateInvoicePDF(data: InvoiceData): jsPDF {
   const sectionStartY = y;
 
   // From
+  const colWidth = Math.floor(contentWidth / 3);
   doc.setFontSize(9);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(dark);
@@ -100,7 +101,7 @@ export function generateInvoicePDF(data: InvoiceData): jsPDF {
   const leftY = drawAddress(fromLines, margin, y + 14);
 
   // Bill To
-  const billX = margin + 200;
+  const billX = margin + colWidth;
   doc.setFont("helvetica", "bold");
   doc.setTextColor(dark);
   doc.text("Bill To:", billX, sectionStartY);
@@ -108,7 +109,7 @@ export function generateInvoicePDF(data: InvoiceData): jsPDF {
   const billEndY = drawAddress(billLines, billX, sectionStartY + 14);
 
   // Metadata (right)
-  const metaLabelX = rightEdge - 170;
+  const metaLabelX = margin + colWidth * 2;
   let metaY = sectionStartY;
   doc.setFontSize(9);
   doc.setTextColor(dark);
