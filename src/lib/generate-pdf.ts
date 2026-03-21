@@ -246,21 +246,21 @@ export function generateInvoicePDF(data: InvoiceData): jsPDF {
           value: "",
         });
         if (payment.account_holder)
-          lines.push({ label: "Beneficiary Name", value: payment.account_holder });
+          lines.push({ label: "Beneficiary", value: payment.account_holder });
         if (payment.bank_name)
-          lines.push({ label: "Bank Name", value: payment.bank_name });
+          lines.push({ label: "Bank", value: payment.bank_name });
         if (payment.account_number)
-          lines.push({ label: "Account Number", value: payment.account_number });
+          lines.push({ label: "Account", value: payment.account_number });
         if (payment.routing_number)
-          lines.push({ label: "Routing Number", value: payment.routing_number });
+          lines.push({ label: "Routing", value: payment.routing_number });
         if (payment.account_type)
-          lines.push({ label: "Account Type", value: payment.account_type });
-        if (payment.bank_address)
-          lines.push({ label: "Bank Address", value: payment.bank_address });
+          lines.push({ label: "Type", value: payment.account_type });
         if (payment.swift)
           lines.push({ label: "SWIFT", value: payment.swift });
         if (payment.iban)
           lines.push({ label: "IBAN", value: payment.iban });
+        if (payment.bank_address)
+          lines.push({ label: "Bank Address", value: payment.bank_address });
       } else {
         lines.push({ label: "Cryptocurrency", value: "" });
         if (payment.network)
@@ -273,9 +273,11 @@ export function generateInvoicePDF(data: InvoiceData): jsPDF {
           lines.push({ label: "Memo / Tag", value: payment.memo });
       }
 
-      const boxHeight = lines.length * 14 + 16;
-      y = ensureSpace(boxHeight + 20, y);
-      const boxStartY = y - 10;
+      const boxPadding = 10;
+      const lineSpacing = 14;
+      const boxHeight = lines.length * lineSpacing + boxPadding * 2;
+      y = ensureSpace(boxHeight + 10, y);
+      const boxStartY = y;
 
       doc.setFillColor("#fafafa");
       doc.setDrawColor("#cccccc");
@@ -284,7 +286,7 @@ export function generateInvoicePDF(data: InvoiceData): jsPDF {
       doc.setFontSize(9);
       doc.setTextColor(dark);
 
-      let tempY = y;
+      let tempY = boxStartY + boxPadding + 10;
       for (const line of lines) {
         if (line.value) {
           doc.setFont("helvetica", "bold");
@@ -297,15 +299,16 @@ export function generateInvoicePDF(data: InvoiceData): jsPDF {
           doc.setFont("helvetica", "bold");
           doc.text(line.label + ":", margin + 10, tempY);
         }
-        tempY += 14;
+        tempY += lineSpacing;
       }
 
-      y = tempY + 12;
+      y = boxStartY + boxHeight + 10;
     }
   }
 
   // ── Notes ──
   if (data.notes) {
+    y += 12;
     y = ensureSpace(40, y);
     doc.setFontSize(10);
     doc.setFont("helvetica", "bold");
