@@ -122,68 +122,26 @@ export function AddressForm({
             className="mt-1"
           />
         </div>
-        <div className="grid grid-cols-3 gap-3">
-          <div>
-            <Label htmlFor={`${id}-city`} className="text-xs text-muted-foreground">
-              City
-            </Label>
-            <Input
-              id={`${id}-city`}
-              placeholder="City"
-              value={data.city}
-              onChange={(e) => onChange("city", e.target.value)}
-              className="mt-1"
-            />
-          </div>
-          <div>
-            <Label htmlFor={`${id}-state`} className="text-xs text-muted-foreground">
-              State / Province
-            </Label>
-            <Input
-              id={`${id}-state`}
-              placeholder="State"
-              value={data.state}
-              onChange={(e) => onChange("state", e.target.value)}
-              className="mt-1"
-            />
-          </div>
-          <div>
-            <Label htmlFor={`${id}-zip`} className="text-xs text-muted-foreground">
-              ZIP / Postal Code
-            </Label>
-            <Input
-              id={`${id}-zip`}
-              placeholder="ZIP"
-              value={data.zip || ""}
-              onChange={(e) => onChange("zip", e.target.value)}
-              className="mt-1"
-            />
-          </div>
-        </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <Label htmlFor={`${id}-country`} className="text-xs text-muted-foreground">
-              Country
-            </Label>
-            <Input
-              id={`${id}-country`}
-              placeholder="Country"
-              value={data.country}
-              onChange={(e) => onChange("country", e.target.value)}
-              className="mt-1"
-            />
+            <Label htmlFor={`${id}-city`} className="text-xs text-muted-foreground">City</Label>
+            <Input id={`${id}-city`} placeholder="City" value={data.city} onChange={(e) => onChange("city", e.target.value)} className="mt-1" />
           </div>
           <div>
-            <Label htmlFor={`${id}-vat`} className="text-xs text-muted-foreground">
-              VAT Number (optional)
-            </Label>
-            <Input
-              id={`${id}-vat`}
-              placeholder="VAT"
-              value={data.vat || ""}
-              onChange={(e) => onChange("vat", e.target.value)}
-              className="mt-1"
-            />
+            <Label htmlFor={`${id}-state`} className="text-xs text-muted-foreground">State</Label>
+            <Input id={`${id}-state`} placeholder="State" value={data.state} onChange={(e) => onChange("state", e.target.value)} className="mt-1" />
+          </div>
+          <div>
+            <Label htmlFor={`${id}-zip`} className="text-xs text-muted-foreground">ZIP Code</Label>
+            <Input id={`${id}-zip`} placeholder="ZIP" value={data.zip || ""} onChange={(e) => onChange("zip", e.target.value)} className="mt-1" />
+          </div>
+          <div>
+            <Label htmlFor={`${id}-country`} className="text-xs text-muted-foreground">Country</Label>
+            <Input id={`${id}-country`} placeholder="Country" value={data.country} onChange={(e) => onChange("country", e.target.value)} className="mt-1" />
+          </div>
+          <div>
+            <Label htmlFor={`${id}-vat`} className="text-xs text-muted-foreground">VAT (optional)</Label>
+            <Input id={`${id}-vat`} placeholder="VAT" value={data.vat || ""} onChange={(e) => onChange("vat", e.target.value)} className="mt-1" />
           </div>
         </div>
       </div>
