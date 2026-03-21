@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef, useMemo, type ChangeEvent } from "react";
+import { useState, useCallback, useRef, useMemo, useEffect, type ChangeEvent } from "react";
 import { sileo } from "sileo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +28,7 @@ import { getBankFields } from "@/components/invoice/payment-form";
 import {
   getInvoiceService,
   type SavedInvoice,
+  type SavedPaymentMethod,
 } from "@/lib/services";
 import { InvoicePreview } from "@/components/invoice-preview";
 import { AddressForm } from "@/components/invoice/address-form";
@@ -70,9 +71,21 @@ export function InvoiceForm() {
   const [historyRefresh, setHistoryRefresh] = useState(0);
   const [taxPreset, setTaxPreset] = useState("custom");
   const [hasPrevious, setHasPrevious] = useState(false);
+  const [savedPayments, setSavedPayments] = useState<SavedPaymentMethod[]>([]);
   const pendingDownload = useRef(false);
   const previousInvoice = useRef<InvoiceData | null>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
+
+  // Load saved payment methods
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!svc || !storageEnabled) return;
+      const list = await svc.getAllPaymentMethods();
+      if (!cancelled) setSavedPayments(list);
+    })();
+    return () => { cancelled = true; };
+  }, [svc, storageEnabled, historyRefresh]);
 
   const updateField = useCallback(
     <K extends keyof InvoiceData>(key: K, value: InvoiceData[K]) => {
@@ -615,7 +628,7 @@ export function InvoiceForm() {
                 />
               ))}
 
-              <div className="flex gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <Button variant="outline" size="sm" onClick={() => addPayment("bank")} className="cursor-pointer">
                   <CreditCard className="size-4 mr-1" />
                   Add Bank
@@ -624,6 +637,26 @@ export function InvoiceForm() {
                   <Wallet className="size-4 mr-1" />
                   Add Crypto
                 </Button>
+                {savedPayments.length > 0 && (
+                  <Select onValueChange={(id) => {
+                    const method = savedPayments.find((m) => m.id === id);
+                    if (method) handleUseSavedPayment(structuredClone(method.data));
+                  }}>
+                    <SelectTrigger className="w-auto cursor-pointer text-xs h-8 gap-1">
+                      <SelectValue placeholder="Use saved..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {savedPayments.map((m) => (
+                        <SelectItem key={m.id} value={m.id} className="cursor-pointer">
+                          <span className="flex items-center gap-1.5">
+                            {m.type === "bank" ? <CreditCard className="size-3" /> : <Wallet className="size-3" />}
+                            {m.label}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
             </CardContent>
           </Card>
