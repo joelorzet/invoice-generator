@@ -10,8 +10,7 @@ export function SileoToaster() {
   useEffect(() => {
     function update() {
       const isLight = document.documentElement.classList.contains("light");
-      // Invert: dark toast on light bg, light toast on dark bg
-      setToastTheme(isLight ? "dark" : "light");
+      setToastTheme(isLight ? "light" : "dark");
     }
 
     update();
