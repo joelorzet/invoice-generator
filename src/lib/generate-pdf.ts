@@ -41,19 +41,21 @@ export function generateInvoicePDF(data: InvoiceData): jsPDF {
   ): number {
     let ay = startY;
     doc.setFontSize(9);
-    for (const line of lines) {
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const isName = i === 0;
       if (line.label) {
         doc.setFont("helvetica", "bold");
         doc.setTextColor(muted);
         const labelText = line.label + ": ";
         doc.text(labelText, x, ay);
         const labelW = doc.getTextWidth(labelText);
-        doc.setFont("helvetica", "normal");
+        doc.setFont("helvetica", isName ? "bold" : "normal");
         doc.setTextColor(dark);
         doc.text(line.value, x + labelW, ay);
       } else {
-        doc.setFont("helvetica", "normal");
-        doc.setTextColor(muted);
+        doc.setFont("helvetica", isName ? "bold" : "normal");
+        doc.setTextColor(isName ? dark : muted);
         doc.text(line.value, x, ay);
       }
       ay += 13;
@@ -61,13 +63,29 @@ export function generateInvoicePDF(data: InvoiceData): jsPDF {
     return ay;
   }
 
-  let y = margin + 32;
+  let y = margin;
 
-  // ── INVOICE title (right) ──
+  // ── Logo + INVOICE title ──
+  if (data.logo) {
+    try {
+      const logoHeight = 50;
+      const img = new Image();
+      img.src = data.logo;
+      const aspect = img.width / img.height || 1;
+      const logoWidth = logoHeight * aspect;
+      doc.addImage(data.logo, "PNG", margin, y, logoWidth, logoHeight);
+    } catch {
+      // Skip logo if it fails to load
+    }
+  }
+
+  y += 32;
   doc.setFontSize(32);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(dark);
   doc.text("INVOICE", rightEdge, y, { align: "right" });
+
+  if (data.logo) y += 24;
 
   // ── From + Bill To (left) | Metadata (right) ──
   y += 32;

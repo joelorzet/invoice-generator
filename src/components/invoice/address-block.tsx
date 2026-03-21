@@ -19,10 +19,10 @@ export function AddressBlock({
           line.label ? (
             <p key={i}>
               <span className="text-gray-400">{line.label}: </span>
-              <span className="text-gray-600">{line.value}</span>
+              <span className={i === 0 ? "font-bold text-gray-800" : "text-gray-600"}>{line.value}</span>
             </p>
           ) : (
-            <p key={i} className="text-gray-600">
+            <p key={i} className={i === 0 ? "font-bold text-gray-800" : "text-gray-600"}>
               {line.value}
             </p>
           )

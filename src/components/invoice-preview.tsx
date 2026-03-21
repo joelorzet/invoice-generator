@@ -24,8 +24,14 @@ export function InvoicePreview({ data }: { data: InvoiceData }) {
 
   return (
     <div className="bg-white rounded-md shadow-sm p-6 text-gray-700 font-sans overflow-y-auto">
-      {/* INVOICE title */}
-      <div className="flex justify-end mb-4">
+      {/* Logo + INVOICE title */}
+      <div className="flex justify-between items-start mb-4">
+        {data.logo ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={data.logo} alt="Logo" className="h-10 w-auto object-contain" />
+        ) : (
+          <div />
+        )}
         <h2 className="text-2xl font-bold text-gray-800 tracking-tight">
           INVOICE
         </h2>

@@ -62,6 +62,7 @@ export interface InvoiceData {
   payment_details: PaymentDetail[];
   notes: string;
   settings: InvoiceSettings;
+  logo?: string;
 }
 
 export function createDefaultInvoice(): InvoiceData {
