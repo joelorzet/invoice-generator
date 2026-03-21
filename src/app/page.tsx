@@ -1,5 +1,6 @@
 import { InvoiceForm } from "@/components/invoice-form";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { GitHubStars } from "@/components/github-stars";
 import { FileText, Zap, Shield, DollarSign, ArrowRight, Database, Palette, CreditCard, Wallet, Lock } from "lucide-react";
 
 const features = [
@@ -76,10 +77,11 @@ export default function Home() {
               href="https://joelorzet.dev"
               className="hidden sm:inline-flex text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer px-3 py-1.5"
               target="_blank"
-            rel="noopener noreferrer"
+              rel="noopener noreferrer"
             >
               Portfolio
             </a>
+            <GitHubStars />
             <ThemeToggle />
             <a
               href="#generator"
