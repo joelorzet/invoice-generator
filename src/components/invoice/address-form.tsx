@@ -122,7 +122,7 @@ export function AddressForm({
             className="mt-1"
           />
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-3">
           <div>
             <Label htmlFor={`${id}-city`} className="text-xs text-muted-foreground">
               City
@@ -144,6 +144,18 @@ export function AddressForm({
               placeholder="State"
               value={data.state}
               onChange={(e) => onChange("state", e.target.value)}
+              className="mt-1"
+            />
+          </div>
+          <div>
+            <Label htmlFor={`${id}-zip`} className="text-xs text-muted-foreground">
+              ZIP / Postal Code
+            </Label>
+            <Input
+              id={`${id}-zip`}
+              placeholder="ZIP"
+              value={data.zip || ""}
+              onChange={(e) => onChange("zip", e.target.value)}
               className="mt-1"
             />
           </div>

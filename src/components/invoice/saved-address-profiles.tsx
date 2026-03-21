@@ -46,9 +46,10 @@ function AddressEditForm({
         <Field label="Country" id={`${prefix}-country`} value={data.country} onChange={(v) => onChange("country", v)} placeholder="Country" />
       </div>
       <Field label="Address" id={`${prefix}-address`} value={data.address} onChange={(v) => onChange("address", v)} placeholder="Street address" />
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-3 gap-3">
         <Field label="City" id={`${prefix}-city`} value={data.city} onChange={(v) => onChange("city", v)} placeholder="City" />
         <Field label="State / Province" id={`${prefix}-state`} value={data.state} onChange={(v) => onChange("state", v)} placeholder="State" />
+        <Field label="ZIP / Postal Code" id={`${prefix}-zip`} value={data.zip || ""} onChange={(v) => onChange("zip", v)} placeholder="ZIP" />
       </div>
       <Field label="VAT Number (optional)" id={`${prefix}-vat`} value={data.vat || ""} onChange={(v) => onChange("vat", v)} placeholder="VAT" />
     </div>

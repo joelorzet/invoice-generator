@@ -3,6 +3,7 @@ export interface Address {
   address: string;
   city: string;
   state: string;
+  zip?: string;
   country: string;
   vat?: string;
 }
@@ -130,13 +131,14 @@ export function buildAddressLines(
   addr: Address,
   showLabels: boolean
 ): AddressLine[] {
+  const { name, address, city, state, zip, country, vat } = addr;
   const lines: AddressLine[] = [];
-  if (addr.name) lines.push({ label: "Name", value: addr.name });
-  if (addr.address) lines.push({ label: "Address", value: addr.address });
-  const cityState = [addr.city, addr.state].filter(Boolean).join(", ");
-  if (cityState) lines.push({ label: "City", value: cityState });
-  if (addr.country) lines.push({ label: "Country", value: addr.country });
-  if (addr.vat) lines.push({ label: "VAT", value: addr.vat });
+  if (name) lines.push({ label: "Name", value: name });
+  if (address) lines.push({ label: "Address", value: address });
+  const cityStateZip = [city, state, zip].filter(Boolean).join(", ");
+  if (cityStateZip) lines.push({ label: "City", value: cityStateZip });
+  if (country) lines.push({ label: "Country", value: country });
+  if (vat) lines.push({ label: "VAT", value: vat });
   return showLabels
     ? lines
     : lines.map((l) => ({ label: "", value: l.value }));
