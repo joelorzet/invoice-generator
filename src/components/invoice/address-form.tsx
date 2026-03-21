@@ -139,10 +139,10 @@ export function AddressForm({
             <Label htmlFor={`${id}-country`} className="text-xs text-muted-foreground">Country</Label>
             <Input id={`${id}-country`} placeholder="Country" value={data.country} onChange={(e) => onChange("country", e.target.value)} className="mt-1" />
           </div>
-          <div>
-            <Label htmlFor={`${id}-vat`} className="text-xs text-muted-foreground">VAT (optional)</Label>
-            <Input id={`${id}-vat`} placeholder="VAT" value={data.vat || ""} onChange={(e) => onChange("vat", e.target.value)} className="mt-1" />
-          </div>
+        </div>
+        <div>
+          <Label htmlFor={`${id}-vat`} className="text-xs text-muted-foreground">VAT (optional)</Label>
+          <Input id={`${id}-vat`} placeholder="VAT" value={data.vat || ""} onChange={(e) => onChange("vat", e.target.value)} className="mt-1" />
         </div>
       </div>
     </div>
