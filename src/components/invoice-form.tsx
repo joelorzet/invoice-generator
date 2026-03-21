@@ -40,6 +40,7 @@ import { StorageConsentDialog } from "@/components/invoice/storage-consent-dialo
 import { InvoiceHistory } from "@/components/invoice/invoice-history";
 import { SavedPaymentMethods } from "@/components/invoice/saved-payment-methods";
 import { SavedAddressProfiles } from "@/components/invoice/saved-address-profiles";
+import { ConfirmDialog } from "@/components/invoice/confirm-dialog";
 import {
   Plus,
   Trash2,
@@ -52,6 +53,8 @@ import {
   Trash,
   History,
   ImagePlus,
+  RotateCcw,
+  AlertTriangle,
 } from "lucide-react";
 
 const CURRENCIES = [
@@ -75,6 +78,8 @@ export function InvoiceForm() {
   const [historyRefresh, setHistoryRefresh] = useState(0);
   const [taxPreset, setTaxPreset] = useState("custom");
   const [hasPrevious, setHasPrevious] = useState(false);
+  const [clearFormOpen, setClearFormOpen] = useState(false);
+  const [clearAllOpen, setClearAllOpen] = useState(false);
   const [savedPayments, setSavedPayments] = useState<SavedPaymentMethod[]>([]);
   const [savedFromProfiles, setSavedFromProfiles] = useState<SavedAddressProfile[]>([]);
   const [savedClientProfiles, setSavedClientProfiles] = useState<SavedAddressProfile[]>([]);
@@ -327,12 +332,23 @@ export function InvoiceForm() {
     setHasPrevious(false);
   }, []);
 
-  const handleClearData = useCallback(() => {
+  const handleClearForm = useCallback(() => {
+    const number = invoice.invoice_metadata.invoice_number;
+    const next = createDefaultInvoice();
+    next.invoice_metadata.invoice_number = number;
+    setInvoice(next);
+    setEditingId(undefined);
+    setClearFormOpen(false);
+    sileo.success({ title: "Form Cleared", description: "The invoice form has been reset." });
+  }, [invoice.invoice_metadata.invoice_number]);
+
+  const handleClearAllData = useCallback(() => {
     svc?.clearAllData();
     setStorageEnabled(false);
     setConsentDenied(false);
     setHistoryRefresh((n) => n + 1);
-    sileo.success({ title: "Data Cleared", description: "All saved invoices and preferences have been removed." });
+    setClearAllOpen(false);
+    sileo.success({ title: "All Data Cleared", description: "All saved invoices, payment methods, and address profiles have been removed." });
   }, [svc]);
 
   const handleDownloadFromHistory = useCallback(
@@ -387,6 +403,24 @@ export function InvoiceForm() {
   return (
     <>
       <StorageConsentDialog open={consentDialogOpen} onConsent={handleConsent} />
+      <ConfirmDialog
+        open={clearFormOpen}
+        icon={RotateCcw}
+        title="Clear invoice form?"
+        description="This will reset all fields in the current invoice to their defaults. Your saved data (invoices, payment methods, address profiles) will not be affected."
+        confirmLabel="Clear form"
+        onConfirm={handleClearForm}
+        onCancel={() => setClearFormOpen(false)}
+      />
+      <ConfirmDialog
+        open={clearAllOpen}
+        icon={AlertTriangle}
+        title="Delete all saved data?"
+        description="This will permanently remove all saved invoices, payment methods, and address profiles from your browser. This action cannot be undone."
+        confirmLabel="Delete everything"
+        onConfirm={handleClearAllData}
+        onCancel={() => setClearAllOpen(false)}
+      />
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
         {/* LEFT: Form */}
@@ -577,15 +611,13 @@ export function InvoiceForm() {
                   <Tag className="size-3.5" />
                   Show address labels
                 </label>
-                {storageEnabled && (
-                  <button
-                    onClick={handleClearData}
-                    className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-destructive transition-colors cursor-pointer"
-                  >
-                    <Trash className="size-3" />
-                    Clear saved data
-                  </button>
-                )}
+                <button
+                  onClick={() => setClearFormOpen(true)}
+                  className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-destructive transition-colors cursor-pointer"
+                >
+                  <RotateCcw className="size-3" />
+                  Clear form
+                </button>
                 {!storageEnabled && consentDenied && (
                   <button
                     onClick={handleEnableStorage}
@@ -781,6 +813,15 @@ export function InvoiceForm() {
           <SavedAddressProfiles
             refreshKey={historyRefresh}
           />
+          <div className="flex justify-end pt-4 border-t border-border">
+            <button
+              onClick={() => setClearAllOpen(true)}
+              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-destructive transition-colors cursor-pointer"
+            >
+              <Trash className="size-3" />
+              Clear all saved data
+            </button>
+          </div>
         </div>
       )}
     </>
