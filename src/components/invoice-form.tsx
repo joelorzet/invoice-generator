@@ -509,13 +509,13 @@ export function InvoiceForm() {
               {/* Theme selector */}
               <div>
                 <Label className="text-xs text-muted-foreground mb-2 block">Invoice Theme</Label>
-                <div className="flex flex-wrap gap-2">
+                <div className="grid grid-cols-4 gap-2">
                   {Object.entries(INVOICE_THEMES).map(([key, t]) => (
                     <button
                       key={key}
                       type="button"
                       onClick={() => updateField("settings", { ...invoice.settings, themeName: key })}
-                      className={`flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs cursor-pointer transition-colors ${
+                      className={`flex items-center justify-center gap-1.5 rounded-md border py-1.5 text-xs cursor-pointer transition-colors ${
                         (invoice.settings.themeName || "classic") === key
                           ? "border-primary bg-primary/10 text-primary"
                           : "border-border text-muted-foreground hover:border-primary/50"
@@ -528,7 +528,7 @@ export function InvoiceForm() {
                   <button
                     type="button"
                     onClick={() => updateField("settings", { ...invoice.settings, themeName: "custom" })}
-                    className={`flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs cursor-pointer transition-colors ${
+                    className={`flex items-center justify-center gap-1.5 rounded-md border col-span-2 py-1.5 text-xs cursor-pointer transition-colors ${
                       invoice.settings.themeName === "custom"
                         ? "border-primary bg-primary/10 text-primary"
                         : "border-border text-muted-foreground hover:border-primary/50"
