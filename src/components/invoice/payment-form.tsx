@@ -116,10 +116,6 @@ export function PaymentCard({
                 Bank Transfer
               </h4>
               <div className="grid grid-cols-2 gap-3">
-                <Field label="Account Holder" value={payment.account_holder} onChange={(v) => onUpdate("account_holder", v)} />
-                <Field label="Bank Name" value={payment.bank_name} onChange={(v) => onUpdate("bank_name", v)} />
-                {f.account_number && <Field label="Account Number" value={payment.account_number} onChange={(v) => onUpdate("account_number", v)} />}
-                {f.routing_number && <Field label="Routing Number" value={payment.routing_number || ""} onChange={(v) => onUpdate("routing_number", v)} />}
                 <div>
                   <Label className="text-xs text-muted-foreground">Account Currency</Label>
                   <Select
@@ -136,6 +132,10 @@ export function PaymentCard({
                     </SelectContent>
                   </Select>
                 </div>
+                <Field label="Account Holder" value={payment.account_holder} onChange={(v) => onUpdate("account_holder", v)} />
+                <Field label="Bank Name" value={payment.bank_name} onChange={(v) => onUpdate("bank_name", v)} />
+                {f.account_number && <Field label="Account Number" value={payment.account_number} onChange={(v) => onUpdate("account_number", v)} />}
+                {f.routing_number && <Field label="Routing Number" value={payment.routing_number || ""} onChange={(v) => onUpdate("routing_number", v)} />}
                 {f.account_type && <Field label="Account Type" value={payment.account_type || ""} onChange={(v) => onUpdate("account_type", v)} placeholder="e.g. Checking Account" />}
                 {f.swift && <Field label="SWIFT Code" value={payment.swift || ""} onChange={(v) => onUpdate("swift", v)} />}
                 {f.iban && <Field label="IBAN" value={payment.iban || ""} onChange={(v) => onUpdate("iban", v)} />}
