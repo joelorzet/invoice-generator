@@ -263,7 +263,7 @@ export function PaymentCard({
           variant="ghost"
           size="icon-xs"
           onClick={onRemove}
-          className="cursor-pointer text-muted-foreground hover:text-destructive"
+          className="cursor-pointer text-foreground hover:text-destructive"
           aria-label="Remove payment method"
         >
           <X className="size-3.5" />

@@ -153,7 +153,7 @@ export function InvoiceHistory({
                           e.stopPropagation();
                           onDownload(inv);
                         }}
-                        className="cursor-pointer text-muted-foreground hover:text-primary"
+                        className="cursor-pointer text-foreground hover:text-primary"
                         aria-label={`Download invoice ${inv.invoice_number}`}
                       >
                         <Download className="size-3.5" />
@@ -165,7 +165,7 @@ export function InvoiceHistory({
                           e.stopPropagation();
                           setDeleteTarget(inv);
                         }}
-                        className="cursor-pointer text-muted-foreground hover:text-destructive"
+                        className="cursor-pointer text-foreground hover:text-destructive"
                         aria-label={`Delete invoice ${inv.invoice_number}`}
                       >
                         <Trash2 className="size-3.5" />

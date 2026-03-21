@@ -221,10 +221,10 @@ function ProfileRow({
         )}
       </div>
       <div className="flex items-center gap-1 shrink-0">
-        <Button variant="ghost" size="icon-xs" onClick={() => onEdit(profile)} className="cursor-pointer text-muted-foreground hover:text-primary" aria-label="Edit">
+        <Button variant="ghost" size="icon-xs" onClick={() => onEdit(profile)} className="cursor-pointer text-foreground hover:text-primary" aria-label="Edit">
           <Pencil className="size-3" />
         </Button>
-        <Button variant="ghost" size="icon-xs" onClick={() => onDelete(profile.id)} className="cursor-pointer text-muted-foreground hover:text-destructive" aria-label="Delete">
+        <Button variant="ghost" size="icon-xs" onClick={() => onDelete(profile.id)} className="cursor-pointer text-foreground hover:text-destructive" aria-label="Delete">
           <Trash2 className="size-3" />
         </Button>
       </div>

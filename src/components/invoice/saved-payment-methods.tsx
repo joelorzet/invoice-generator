@@ -217,7 +217,7 @@ export function SavedPaymentMethods({ refreshKey, onUse }: SavedPaymentMethodsPr
                   variant="ghost"
                   size="icon-xs"
                   onClick={() => handleEdit(method)}
-                  className="cursor-pointer text-muted-foreground hover:text-primary"
+                  className="cursor-pointer text-foreground hover:text-primary"
                   aria-label="Edit"
                 >
                   <Pencil className="size-3" />
@@ -226,7 +226,7 @@ export function SavedPaymentMethods({ refreshKey, onUse }: SavedPaymentMethodsPr
                   variant="ghost"
                   size="icon-xs"
                   onClick={() => handleDelete(method.id)}
-                  className="cursor-pointer text-muted-foreground hover:text-destructive"
+                  className="cursor-pointer text-foreground hover:text-destructive"
                   aria-label="Delete"
                 >
                   <Trash2 className="size-3" />
