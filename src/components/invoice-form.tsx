@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef, useMemo, useEffect, type ChangeEvent } from "react";
+import { useState, useCallback, useRef, useMemo, useEffect, useSyncExternalStore, type ChangeEvent } from "react";
 import { sileo } from "sileo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -69,12 +69,8 @@ export function InvoiceForm() {
   const [invoice, setInvoice] = useState<InvoiceData>(createDefaultInvoice);
   const [editingId, setEditingId] = useState<string | undefined>(undefined);
   const [consentDialogOpen, setConsentDialogOpen] = useState(false);
-  const [storageEnabled, setStorageEnabled] = useState(
-    () => !!svc?.isStorageEnabled()
-  );
-  const [consentDenied, setConsentDenied] = useState(
-    () => !!(svc && !svc.isStorageEnabled() && svc.getConsent() === "denied")
-  );
+  const [storageEnabled, setStorageEnabled] = useState(false);
+  const [consentDenied, setConsentDenied] = useState(false);
   const [historyRefresh, setHistoryRefresh] = useState(0);
   const [taxPreset, setTaxPreset] = useState("custom");
   const [hasPrevious, setHasPrevious] = useState(false);
@@ -86,6 +82,17 @@ export function InvoiceForm() {
   const pendingDownload = useRef(false);
   const previousInvoice = useRef<InvoiceData | null>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
+
+  // Check consent state after hydration
+  const consentSnapshot = useSyncExternalStore(
+    () => () => {},
+    () => svc?.getConsent() ?? null,
+    () => null
+  );
+  const derivedStorageEnabled = consentSnapshot === "granted";
+  const derivedConsentDenied = consentSnapshot === "denied";
+  if (derivedStorageEnabled !== storageEnabled) setStorageEnabled(derivedStorageEnabled);
+  if (derivedConsentDenied !== consentDenied) setConsentDenied(derivedConsentDenied);
 
   // Load saved payment methods and address profiles
   useEffect(() => {
