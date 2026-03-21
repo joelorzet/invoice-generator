@@ -804,23 +804,35 @@ export function InvoiceForm() {
         </div>
       </div>
 
-      {/* Invoice History (full width, below the form) */}
+      {/* Saved Data (full width, below the form) */}
       {storageEnabled && (
-        <div className="mt-10 space-y-10">
-          <InvoiceHistory
-            onLoad={handleLoadInvoice}
-            onDownload={handleDownloadFromHistory}
-            onNew={handleNewInvoice}
-            refreshKey={historyRefresh}
-          />
-          <SavedPaymentMethods
-            refreshKey={historyRefresh}
-            onUse={handleUseSavedPayment}
-          />
-          <SavedAddressProfiles
-            refreshKey={historyRefresh}
-          />
-          <div className="flex justify-end pt-4 border-t border-border">
+        <div className="mt-10 space-y-6">
+          <Card>
+            <CardContent className="pt-6">
+              <InvoiceHistory
+                onLoad={handleLoadInvoice}
+                onDownload={handleDownloadFromHistory}
+                onNew={handleNewInvoice}
+                refreshKey={historyRefresh}
+              />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <SavedPaymentMethods
+                refreshKey={historyRefresh}
+                onUse={handleUseSavedPayment}
+              />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <SavedAddressProfiles
+                refreshKey={historyRefresh}
+              />
+            </CardContent>
+          </Card>
+          <div className="flex justify-end">
             <button
               onClick={() => setClearAllOpen(true)}
               className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-destructive transition-colors cursor-pointer"
