@@ -29,6 +29,7 @@ import {
   getInvoiceService,
   type SavedInvoice,
   type SavedPaymentMethod,
+  type SavedAddressProfile,
 } from "@/lib/services";
 import { InvoicePreview } from "@/components/invoice-preview";
 import { AddressForm } from "@/components/invoice/address-form";
@@ -36,6 +37,7 @@ import { PaymentCard } from "@/components/invoice/payment-form";
 import { StorageConsentDialog } from "@/components/invoice/storage-consent-dialog";
 import { InvoiceHistory } from "@/components/invoice/invoice-history";
 import { SavedPaymentMethods } from "@/components/invoice/saved-payment-methods";
+import { SavedAddressProfiles } from "@/components/invoice/saved-address-profiles";
 import {
   Plus,
   Trash2,
@@ -72,17 +74,26 @@ export function InvoiceForm() {
   const [taxPreset, setTaxPreset] = useState("custom");
   const [hasPrevious, setHasPrevious] = useState(false);
   const [savedPayments, setSavedPayments] = useState<SavedPaymentMethod[]>([]);
+  const [savedFromProfiles, setSavedFromProfiles] = useState<SavedAddressProfile[]>([]);
+  const [savedClientProfiles, setSavedClientProfiles] = useState<SavedAddressProfile[]>([]);
   const pendingDownload = useRef(false);
   const previousInvoice = useRef<InvoiceData | null>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
 
-  // Load saved payment methods
+  // Load saved payment methods and address profiles
   useEffect(() => {
     let cancelled = false;
     (async () => {
       if (!svc || !storageEnabled) return;
-      const list = await svc.getAllPaymentMethods();
-      if (!cancelled) setSavedPayments(list);
+      const [payments, fromProfiles, clientProfiles] = await Promise.all([
+        svc.getAllPaymentMethods(),
+        svc.getAddressProfiles("from"),
+        svc.getAddressProfiles("client"),
+      ]);
+      if (cancelled) return;
+      setSavedPayments(payments);
+      setSavedFromProfiles(fromProfiles);
+      setSavedClientProfiles(clientProfiles);
     })();
     return () => { cancelled = true; };
   }, [svc, storageEnabled, historyRefresh]);
@@ -574,8 +585,20 @@ export function InvoiceForm() {
                 )}
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <AddressForm title="From" data={invoice.from} onChange={(f, v) => updateNested("from", f, v)} />
-                <AddressForm title="Bill To" data={invoice.bill_to} onChange={(f, v) => updateNested("bill_to", f, v)} />
+                <AddressForm
+                  title="From"
+                  data={invoice.from}
+                  onChange={(f, v) => updateNested("from", f, v)}
+                  savedProfiles={savedFromProfiles}
+                  onLoadSaved={(data) => updateField("from", data)}
+                />
+                <AddressForm
+                  title="Bill To"
+                  data={invoice.bill_to}
+                  onChange={(f, v) => updateNested("bill_to", f, v)}
+                  savedProfiles={savedClientProfiles}
+                  onLoadSaved={(data) => updateField("bill_to", data)}
+                />
               </div>
             </CardContent>
           </Card>
@@ -698,6 +721,9 @@ export function InvoiceForm() {
           <SavedPaymentMethods
             refreshKey={historyRefresh}
             onUse={handleUseSavedPayment}
+          />
+          <SavedAddressProfiles
+            refreshKey={historyRefresh}
           />
         </div>
       )}

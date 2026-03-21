@@ -1,4 +1,4 @@
-import type { InvoiceData, PaymentDetail } from "../invoice-types";
+import type { InvoiceData, PaymentDetail, Address } from "../invoice-types";
 import type {
   IConsentService,
   StorageConsent,
@@ -6,6 +6,9 @@ import type {
   SavedInvoice,
   IPaymentMethodStorageService,
   SavedPaymentMethod,
+  IAddressProfileStorageService,
+  SavedAddressProfile,
+  AddressProfileType,
   IPdfService,
   IInvoiceService,
 } from "../interfaces";
@@ -15,6 +18,7 @@ export class InvoiceService implements IInvoiceService {
     private consent: IConsentService,
     private storage: IInvoiceStorageService,
     private paymentMethods: IPaymentMethodStorageService,
+    private addressProfiles: IAddressProfileStorageService,
     private pdf: IPdfService
   ) {}
 
@@ -37,6 +41,7 @@ export class InvoiceService implements IInvoiceService {
     this.consent.clear();
     await this.storage.clearAll();
     await this.paymentMethods.clearAll();
+    await this.addressProfiles.clearAll();
   }
 
   async getAll(): Promise<SavedInvoice[]> {
@@ -58,6 +63,20 @@ export class InvoiceService implements IInvoiceService {
 
   async deletePaymentMethod(id: string): Promise<void> {
     return this.paymentMethods.delete(id);
+  }
+
+  // Address Profiles
+  async saveAddressProfile(label: string, type: AddressProfileType, data: Address, existingId?: string): Promise<SavedAddressProfile> {
+    return this.addressProfiles.save(label, type, data, existingId);
+  }
+
+  async getAddressProfiles(type?: AddressProfileType): Promise<SavedAddressProfile[]> {
+    if (type) return this.addressProfiles.getAllByType(type);
+    return this.addressProfiles.getAll();
+  }
+
+  async deleteAddressProfile(id: string): Promise<void> {
+    return this.addressProfiles.delete(id);
   }
 
   downloadOnly(data: InvoiceData): void {

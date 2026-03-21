@@ -1,5 +1,6 @@
 export type { StorageConsent, IConsentService } from "./consent.interface";
 export type { SavedInvoice, IInvoiceStorageService } from "./invoice-storage.interface";
 export type { SavedPaymentMethod, IPaymentMethodStorageService } from "./payment-method.interface";
+export type { SavedAddressProfile, AddressProfileType, IAddressProfileStorageService } from "./address-profile.interface";
 export type { IPdfService } from "./pdf.interface";
 export type { IInvoiceService } from "./invoice.interface";
