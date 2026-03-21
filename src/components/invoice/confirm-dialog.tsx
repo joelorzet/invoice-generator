@@ -55,7 +55,14 @@ export function ConfirmDialog({
           <Button variant="outline" onClick={onCancel} className="cursor-pointer px-6">
             {cancelLabel}
           </Button>
-          <Button variant={variant} onClick={onConfirm} className="cursor-pointer px-6">
+          <Button
+            onClick={onConfirm}
+            className={`cursor-pointer px-6 ${
+              variant === "destructive"
+                ? "bg-destructive text-white hover:bg-destructive/90"
+                : ""
+            }`}
+          >
             {confirmLabel}
           </Button>
         </div>
