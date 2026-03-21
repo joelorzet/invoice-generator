@@ -109,7 +109,7 @@
  * zinc-900 #18181b  → foreground
  */
 .light {
-  --background: #f0f0f3;
+  --background: #fafafa;
   --foreground: #18181b;
   --card: #ffffff;
   --card-foreground: #18181b;
@@ -117,15 +117,15 @@
   --popover-foreground: #18181b;
   --primary: #059669;
   --primary-foreground: #ffffff;
-  --secondary: #e4e4e7;
+  --secondary: #f4f4f5;
   --secondary-foreground: #18181b;
-  --muted: #e8e8ec;
+  --muted: #f4f4f5;
   --muted-foreground: #3f3f46;
-  --accent: #e4e4e7;
+  --accent: #f4f4f5;
   --accent-foreground: #18181b;
   --destructive: #dc2626;
-  --border: #c8c8d0;
-  --input: #c8c8d0;
+  --border: #d4d4d8;
+  --input: #d4d4d8;
   --ring: #059669;
   --chart-1: #059669;
   --chart-2: #6366f1;
