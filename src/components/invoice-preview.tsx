@@ -139,7 +139,7 @@ export function InvoicePreview({ data }: { data: InvoiceData }) {
       </div>
 
       {/* Payment Details */}
-      <PaymentDetailsDisplay payments={data.payment_details} className="mb-3" />
+      <PaymentDetailsDisplay payments={data.payment_details} accentColor={theme.primary} className="mb-3" />
 
       {/* Notes */}
       {data.notes && (

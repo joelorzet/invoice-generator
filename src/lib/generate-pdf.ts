@@ -26,6 +26,19 @@ export function generateInvoicePDF(data: InvoiceData): jsPDF {
   const muted = theme.muted;
   const headerBg = theme.headerBg;
 
+  // Create a very light tint of the primary color (mix with white at ~8%)
+  function lightTint(hex: string, amount = 0.08): string {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    const tr = Math.round(r + (255 - r) * (1 - amount));
+    const tg = Math.round(g + (255 - g) * (1 - amount));
+    const tb = Math.round(b + (255 - b) * (1 - amount));
+    return `#${tr.toString(16).padStart(2, "0")}${tg.toString(16).padStart(2, "0")}${tb.toString(16).padStart(2, "0")}`;
+  }
+  const accentBg = lightTint(theme.primary);
+  const accentBorder = lightTint(theme.primary, 0.2);
+
   // Helper: check if we need a new page
   function ensureSpace(needed: number, currentY: number): number {
     if (currentY + needed > pageHeight - margin) {
@@ -300,8 +313,8 @@ export function generateInvoicePDF(data: InvoiceData): jsPDF {
       y = ensureSpace(boxHeight + 10, y);
       const boxStartY = y;
 
-      doc.setFillColor("#fafafa");
-      doc.setDrawColor("#cccccc");
+      doc.setFillColor(accentBg);
+      doc.setDrawColor(accentBorder);
       doc.roundedRect(margin, boxStartY, contentWidth, boxHeight, 3, 3, "FD");
 
       doc.setFontSize(9);

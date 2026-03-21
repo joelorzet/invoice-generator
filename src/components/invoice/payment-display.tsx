@@ -54,12 +54,18 @@ function CryptoDetails({ payment }: { payment: CryptoPayment }) {
 
 export function PaymentDetailsDisplay({
   payments,
+  accentColor,
   className = "",
 }: {
   payments: PaymentDetail[];
+  accentColor?: string;
   className?: string;
 }) {
   if (payments.length === 0) return null;
+
+  const boxStyle = accentColor
+    ? { backgroundColor: `${accentColor}0a`, borderColor: `${accentColor}25` }
+    : undefined;
 
   return (
     <div className={className}>
@@ -69,7 +75,8 @@ export function PaymentDetailsDisplay({
       {payments.map((payment, i) => (
         <div
           key={i}
-          className="bg-gray-50 border border-gray-200 rounded px-2.5 py-1.5 mb-1.5 text-[9px] text-gray-600 space-y-px"
+          className="rounded border px-2.5 py-1.5 mb-1.5 text-[9px] text-gray-600 space-y-px"
+          style={boxStyle || { backgroundColor: "#fafafa", borderColor: "#e5e7eb" }}
         >
           {payment.type === "bank" ? (
             <BankDetails payment={payment} />
