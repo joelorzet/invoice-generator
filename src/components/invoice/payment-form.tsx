@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CreditCard, Wallet, X } from "lucide-react";
+import { CreditCard, Wallet, X, ChevronDown } from "lucide-react";
 import type { PaymentDetail, BankPayment, CryptoPayment } from "@/lib/invoice-types";
 import type { SavedPaymentMethod } from "@/lib/services";
 
@@ -121,27 +122,49 @@ function SavedMethodSelector({
   onSelect: (data: PaymentDetail) => void;
   renderLabel: (m: SavedPaymentMethod) => string;
 }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [open]);
+
   if (methods.length === 0) return null;
 
   return (
-    <Select
-      defaultValue=""
-      onValueChange={(id) => {
-        const method = methods.find((m) => m.id === id);
-        if (method) onSelect(structuredClone(method.data));
-      }}
-    >
-      <SelectTrigger className="w-full cursor-pointer text-xs h-8">
-        <SelectValue placeholder="Load from saved..." />
-      </SelectTrigger>
-      <SelectContent>
-        {methods.map((m) => (
-          <SelectItem key={m.id} value={m.id} className="cursor-pointer">
-            {renderLabel(m)}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="flex w-full items-center justify-between rounded-lg border border-input bg-transparent px-2.5 py-1.5 text-xs h-8 cursor-pointer text-muted-foreground hover:text-foreground transition-colors"
+      >
+        Load from saved...
+        <ChevronDown className="size-3.5" />
+      </button>
+      {open && (
+        <div className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-popover shadow-md overflow-hidden">
+          {methods.map((m) => (
+            <button
+              key={m.id}
+              type="button"
+              onClick={() => {
+                onSelect(structuredClone(m.data));
+                setOpen(false);
+              }}
+              className="flex w-full items-center gap-2 px-2.5 py-1.5 text-xs text-popover-foreground hover:bg-accent cursor-pointer"
+            >
+              {m.type === "bank" ? <CreditCard className="size-3" /> : <Wallet className="size-3" />}
+              {renderLabel(m)}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
