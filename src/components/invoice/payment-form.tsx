@@ -122,17 +122,17 @@ function SavedMethodSelector({
   onSelect: (data: PaymentDetail) => void;
   renderLabel: (m: SavedPaymentMethod) => string;
 }) {
-  const [selected, setSelected] = useState<string>("");
+  const [resetKey, setResetKey] = useState(0);
 
   if (methods.length === 0) return null;
 
   return (
     <Select
-      value={selected}
+      key={resetKey}
       onValueChange={(id) => {
         const method = methods.find((m) => m.id === id);
         if (method) onSelect(structuredClone(method.data));
-        setSelected("");
+        setResetKey((k) => k + 1);
       }}
     >
       <SelectTrigger className="w-full cursor-pointer text-xs h-8">
