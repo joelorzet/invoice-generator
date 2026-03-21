@@ -109,7 +109,7 @@
  * zinc-900 #18181b  → foreground
  */
 .light {
-  --background: #fafafa;
+  --background: #eff0f1;
   --foreground: #18181b;
   --card: #ffffff;
   --card-foreground: #18181b;
