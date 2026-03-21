@@ -120,12 +120,12 @@
   --secondary: #ececef;
   --secondary-foreground: #27272a;
   --muted: #ececef;
-  --muted-foreground: #71717a;
+  --muted-foreground: #52525b;
   --accent: #ececef;
   --accent-foreground: #27272a;
   --destructive: #dc2626;
-  --border: #e4e4e7;
-  --input: #e4e4e7;
+  --border: #d4d4d8;
+  --input: #d4d4d8;
   --ring: #059669;
   --chart-1: #059669;
   --chart-2: #6366f1;
