@@ -192,9 +192,9 @@ export function SavedPaymentMethods({ refreshKey, onUse }: SavedPaymentMethodsPr
             >
               <div className="flex items-center gap-2 min-w-0">
                 {method.type === "bank" ? (
-                  <CreditCard className="size-4 text-primary shrink-0" />
+                  <CreditCard className="size-5 text-primary shrink-0" />
                 ) : (
-                  <Wallet className="size-4 text-primary shrink-0" />
+                  <Wallet className="size-5 text-primary shrink-0" />
                 )}
                 <span className="font-medium truncate">{method.label}</span>
                 <span className="text-xs text-muted-foreground">
@@ -243,9 +243,9 @@ export function SavedPaymentMethods({ refreshKey, onUse }: SavedPaymentMethodsPr
           <div className="flex items-center justify-between">
             <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
               {adding === "bank" ? (
-                <><CreditCard className="size-4 text-primary" /> {editingId ? "Edit" : "New"} Bank Account</>
+                <><CreditCard className="size-5 text-primary" /> {editingId ? "Edit" : "New"} Bank Account</>
               ) : (
-                <><Wallet className="size-4 text-primary" /> {editingId ? "Edit" : "New"} Crypto Wallet</>
+                <><Wallet className="size-5 text-primary" /> {editingId ? "Edit" : "New"} Crypto Wallet</>
               )}
             </h4>
             <Button variant="ghost" size="icon-xs" onClick={handleCancel} className="cursor-pointer">

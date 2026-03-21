@@ -437,7 +437,7 @@ export function InvoiceForm() {
             <CardHeader className="pb-4">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-base flex items-center gap-2">
-                  <FileText className="size-4 text-primary" />
+                  <FileText className="size-5 text-primary" />
                   Invoice Details
                 </CardTitle>
                 {hasPrevious && (

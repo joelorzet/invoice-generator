@@ -256,7 +256,7 @@ export function PaymentCard({
       {/* Header row: title + remove */}
       <div className="flex items-center justify-between">
         <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-          <Icon className="size-4 text-primary" />
+          <Icon className="size-5 text-primary" />
           {title}
         </h4>
         <Button

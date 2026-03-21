@@ -91,7 +91,7 @@ export function AddressForm({
   return (
     <div className="space-y-3">
       <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-        <Building2 className="size-4 text-primary" />
+        <Building2 className="size-5 text-primary" />
         {title}
       </h3>
       {savedProfiles && savedProfiles.length > 0 && onLoadSaved && (

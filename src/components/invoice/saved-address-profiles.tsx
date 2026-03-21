@@ -173,7 +173,7 @@ export function SavedAddressProfiles({ refreshKey }: SavedAddressProfilesProps) 
         <div className="rounded-md border border-border bg-muted/50 p-4 space-y-3">
           <div className="flex items-center justify-between">
             <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-              <Building2 className="size-4 text-primary" />
+              <Building2 className="size-5 text-primary" />
               {editingId ? "Edit" : "New"} {adding === "from" ? "Sender" : "Client"} Profile
             </h4>
             <Button variant="ghost" size="icon-xs" onClick={handleCancel} className="cursor-pointer">
@@ -214,7 +214,7 @@ function ProfileRow({
   return (
     <div className="flex items-center justify-between rounded-md border border-border bg-muted/50 px-3 py-2 text-sm">
       <div className="flex items-center gap-2 min-w-0">
-        <Building2 className="size-4 text-primary shrink-0" />
+        <Building2 className="size-5 text-primary shrink-0" />
         <span className="font-medium truncate">{profile.label}</span>
         {profile.data.country && (
           <span className="text-xs text-muted-foreground">{profile.data.country}</span>

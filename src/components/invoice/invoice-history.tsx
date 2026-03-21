@@ -96,7 +96,7 @@ export function InvoiceHistory({
       <div>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-            <History className="size-4 text-primary" />
+            <History className="size-5 text-primary" />
             Previous Invoices
           </h3>
           <Button
