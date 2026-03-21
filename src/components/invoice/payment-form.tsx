@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CreditCard, Wallet, X } from "lucide-react";
-import type { PaymentDetail, BankPayment } from "@/lib/invoice-types";
+import type { PaymentDetail, BankPayment, CryptoPayment } from "@/lib/invoice-types";
 import type { SavedPaymentMethod } from "@/lib/services";
 
 const CURRENCIES = [
@@ -62,6 +62,8 @@ function getMemoLabel(network: string): string {
   return "Memo / Tag";
 }
 
+// ── Shared sub-components ──
+
 function Field({
   label,
   value,
@@ -86,6 +88,111 @@ function Field({
   );
 }
 
+function CurrencySelect({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div>
+      <Label className="text-xs text-muted-foreground">Account Currency</Label>
+      <Select value={value} onValueChange={(v) => onChange(v ?? "USD")}>
+        <SelectTrigger className="mt-1 cursor-pointer">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {CURRENCIES.map((c) => (
+            <SelectItem key={c} value={c} className="cursor-pointer">{c}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
+function SavedMethodSelector({
+  methods,
+  onSelect,
+  renderLabel,
+}: {
+  methods: SavedPaymentMethod[];
+  onSelect: (data: PaymentDetail) => void;
+  renderLabel: (m: SavedPaymentMethod) => string;
+}) {
+  if (methods.length === 0) return null;
+
+  return (
+    <Select onValueChange={(id) => {
+      const method = methods.find((m) => m.id === id);
+      if (method) onSelect(structuredClone(method.data));
+    }}>
+      <SelectTrigger className="w-full cursor-pointer text-xs h-8">
+        <SelectValue placeholder="Load from saved..." />
+      </SelectTrigger>
+      <SelectContent>
+        {methods.map((m) => (
+          <SelectItem key={m.id} value={m.id} className="cursor-pointer">
+            {renderLabel(m)}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
+// ── Bank form ──
+
+function BankForm({
+  payment,
+  onUpdate,
+}: {
+  payment: BankPayment;
+  onUpdate: (field: string, value: string) => void;
+}) {
+  const f = getBankFields(payment.account_currency);
+
+  return (
+    <>
+      <CurrencySelect value={payment.account_currency} onChange={(v) => onUpdate("account_currency", v)} />
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Account Holder" value={payment.account_holder} onChange={(v) => onUpdate("account_holder", v)} />
+        <Field label="Bank Name" value={payment.bank_name} onChange={(v) => onUpdate("bank_name", v)} />
+        {f.account_number && <Field label="Account Number" value={payment.account_number} onChange={(v) => onUpdate("account_number", v)} />}
+        {f.routing_number && <Field label="Routing Number" value={payment.routing_number || ""} onChange={(v) => onUpdate("routing_number", v)} />}
+        {f.account_type && <Field label="Account Type" value={payment.account_type || ""} onChange={(v) => onUpdate("account_type", v)} placeholder="e.g. Checking Account" />}
+        {f.swift && <Field label="SWIFT Code" value={payment.swift || ""} onChange={(v) => onUpdate("swift", v)} />}
+        {f.iban && <Field label="IBAN" value={payment.iban || ""} onChange={(v) => onUpdate("iban", v)} />}
+      </div>
+      <Field label="Bank Address" value={payment.bank_address || ""} onChange={(v) => onUpdate("bank_address", v)} />
+    </>
+  );
+}
+
+// ── Crypto form ──
+
+function CryptoForm({
+  payment,
+  onUpdate,
+}: {
+  payment: CryptoPayment;
+  onUpdate: (field: string, value: string) => void;
+}) {
+  return (
+    <>
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Network" value={payment.network} onChange={(v) => onUpdate("network", v)} placeholder="e.g. Ethereum, Stellar, XRP" />
+        <Field label="Currency" value={payment.currency} onChange={(v) => onUpdate("currency", v)} placeholder="e.g. USDT, XLM, XRP" />
+      </div>
+      <Field label="Wallet Address" value={payment.address} onChange={(v) => onUpdate("address", v)} placeholder="0x..." />
+      <Field label={`${getMemoLabel(payment.network)} (optional)`} value={payment.memo || ""} onChange={(v) => onUpdate("memo", v)} placeholder="Required for Stellar, XRP, EOS, Cosmos, BNB" />
+    </>
+  );
+}
+
+// ── Main PaymentCard ──
+
 export function PaymentCard({
   payment,
   onUpdate,
@@ -100,108 +207,47 @@ export function PaymentCard({
   savedMethods?: SavedPaymentMethod[];
 }) {
   const matching = savedMethods?.filter((m) => m.type === payment.type) ?? [];
+  const isBank = payment.type === "bank";
+  const Icon = isBank ? CreditCard : Wallet;
+  const title = isBank ? "Bank Transfer" : "Cryptocurrency";
 
   return (
-    <div className="relative rounded-md border border-border bg-muted/50 p-4 space-y-3">
-      <Button
-        variant="ghost"
-        size="icon-xs"
-        onClick={onRemove}
-        className="absolute top-2 right-2 cursor-pointer text-muted-foreground hover:text-destructive"
-        aria-label="Remove payment method"
-      >
-        <X className="size-3.5" />
-      </Button>
+    <div className="rounded-md border border-border bg-muted/50 p-4 space-y-3">
+      {/* Header row: title + remove */}
+      <div className="flex items-center justify-between">
+        <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
+          <Icon className="size-4 text-primary" />
+          {title}
+        </h4>
+        <Button
+          variant="ghost"
+          size="icon-xs"
+          onClick={onRemove}
+          className="cursor-pointer text-muted-foreground hover:text-destructive"
+          aria-label="Remove payment method"
+        >
+          <X className="size-3.5" />
+        </Button>
+      </div>
 
-      {payment.type === "bank" ? (
-        (() => {
-          const f = getBankFields(payment.account_currency);
-          return (
-            <>
-              <div className="flex items-center justify-between">
-                <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                  <CreditCard className="size-4 text-primary" />
-                  Bank Transfer
-                </h4>
-                {matching.length > 0 && onPrefill && (
-                  <Select onValueChange={(id) => {
-                    const method = matching.find((m) => m.id === id);
-                    if (method) onPrefill(structuredClone(method.data));
-                  }}>
-                    <SelectTrigger className="w-auto cursor-pointer text-xs h-7 gap-1">
-                      <SelectValue placeholder="Load saved..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {matching.map((m) => (
-                        <SelectItem key={m.id} value={m.id} className="cursor-pointer">
-                          {m.label} ({(m.data as BankPayment).account_currency})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              </div>
-              <div>
-                <Label className="text-xs text-muted-foreground">Account Currency</Label>
-                <Select
-                  value={payment.account_currency}
-                  onValueChange={(v) => onUpdate("account_currency", v ?? "USD")}
-                >
-                  <SelectTrigger className="mt-1 cursor-pointer">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {CURRENCIES.map((c) => (
-                      <SelectItem key={c} value={c} className="cursor-pointer">{c}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <Field label="Account Holder" value={payment.account_holder} onChange={(v) => onUpdate("account_holder", v)} />
-                <Field label="Bank Name" value={payment.bank_name} onChange={(v) => onUpdate("bank_name", v)} />
-                {f.account_number && <Field label="Account Number" value={payment.account_number} onChange={(v) => onUpdate("account_number", v)} />}
-                {f.routing_number && <Field label="Routing Number" value={payment.routing_number || ""} onChange={(v) => onUpdate("routing_number", v)} />}
-                {f.account_type && <Field label="Account Type" value={payment.account_type || ""} onChange={(v) => onUpdate("account_type", v)} placeholder="e.g. Checking Account" />}
-                {f.swift && <Field label="SWIFT Code" value={payment.swift || ""} onChange={(v) => onUpdate("swift", v)} />}
-                {f.iban && <Field label="IBAN" value={payment.iban || ""} onChange={(v) => onUpdate("iban", v)} />}
-              </div>
-              <Field label="Bank Address" value={payment.bank_address || ""} onChange={(v) => onUpdate("bank_address", v)} />
-            </>
-          );
-        })()
+      {/* Saved method selector */}
+      {matching.length > 0 && onPrefill && (
+        <SavedMethodSelector
+          methods={matching}
+          onSelect={onPrefill}
+          renderLabel={(m) =>
+            m.type === "bank"
+              ? `${m.label} (${(m.data as BankPayment).account_currency})`
+              : m.label
+          }
+        />
+      )}
+
+      {/* Form fields */}
+      {isBank ? (
+        <BankForm payment={payment as BankPayment} onUpdate={onUpdate} />
       ) : (
-        <>
-          <div className="flex items-center justify-between">
-            <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-              <Wallet className="size-4 text-primary" />
-              Cryptocurrency
-            </h4>
-            {matching.length > 0 && onPrefill && (
-              <Select onValueChange={(id) => {
-                const method = matching.find((m) => m.id === id);
-                if (method) onPrefill(structuredClone(method.data));
-              }}>
-                <SelectTrigger className="w-auto cursor-pointer text-xs h-7 gap-1">
-                  <SelectValue placeholder="Load saved..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {matching.map((m) => (
-                    <SelectItem key={m.id} value={m.id} className="cursor-pointer">
-                      {m.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Network" value={payment.network} onChange={(v) => onUpdate("network", v)} placeholder="e.g. Ethereum, Stellar, XRP" />
-            <Field label="Currency" value={payment.currency} onChange={(v) => onUpdate("currency", v)} placeholder="e.g. USDT, XLM, XRP" />
-          </div>
-          <Field label="Wallet Address" value={payment.address} onChange={(v) => onUpdate("address", v)} placeholder="0x..." />
-          <Field label={`${getMemoLabel(payment.network)} (optional)`} value={payment.memo || ""} onChange={(v) => onUpdate("memo", v)} placeholder="Required for Stellar, XRP, EOS, Cosmos, BNB" />
-        </>
+        <CryptoForm payment={payment as CryptoPayment} onUpdate={onUpdate} />
       )}
     </div>
   );
