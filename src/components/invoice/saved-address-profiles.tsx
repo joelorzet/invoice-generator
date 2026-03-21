@@ -212,7 +212,7 @@ function ProfileRow({
   onDelete: (id: string) => void;
 }) {
   return (
-    <div className="flex items-center justify-between rounded-md border border-border bg-muted/30 px-3 py-2 text-sm">
+    <div className="flex items-center justify-between rounded-md border border-border bg-muted/50 px-3 py-2 text-sm">
       <div className="flex items-center gap-2 min-w-0">
         <Building2 className="size-4 text-primary shrink-0" />
         <span className="font-medium truncate">{profile.label}</span>
