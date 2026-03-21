@@ -26,5 +26,5 @@ export function SileoToaster() {
     return () => observer.disconnect();
   }, []);
 
-  return <Toaster position="bottom-right" theme={toastTheme} />;
+  return <Toaster position="top-center" theme={toastTheme} />;
 }
