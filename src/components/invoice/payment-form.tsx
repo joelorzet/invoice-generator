@@ -115,23 +115,23 @@ export function PaymentCard({
                 <CreditCard className="size-4 text-primary" />
                 Bank Transfer
               </h4>
+              <div>
+                <Label className="text-xs text-muted-foreground">Account Currency</Label>
+                <Select
+                  value={payment.account_currency}
+                  onValueChange={(v) => onUpdate("account_currency", v ?? "USD")}
+                >
+                  <SelectTrigger className="mt-1 cursor-pointer">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CURRENCIES.map((c) => (
+                      <SelectItem key={c} value={c} className="cursor-pointer">{c}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label className="text-xs text-muted-foreground">Account Currency</Label>
-                  <Select
-                    value={payment.account_currency}
-                    onValueChange={(v) => onUpdate("account_currency", v ?? "USD")}
-                  >
-                    <SelectTrigger className="mt-1 cursor-pointer">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {CURRENCIES.map((c) => (
-                        <SelectItem key={c} value={c} className="cursor-pointer">{c}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
                 <Field label="Account Holder" value={payment.account_holder} onChange={(v) => onUpdate("account_holder", v)} />
                 <Field label="Bank Name" value={payment.bank_name} onChange={(v) => onUpdate("bank_name", v)} />
                 {f.account_number && <Field label="Account Number" value={payment.account_number} onChange={(v) => onUpdate("account_number", v)} />}
