@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -121,13 +122,19 @@ function SavedMethodSelector({
   onSelect: (data: PaymentDetail) => void;
   renderLabel: (m: SavedPaymentMethod) => string;
 }) {
+  const [selected, setSelected] = useState<string>("");
+
   if (methods.length === 0) return null;
 
   return (
-    <Select onValueChange={(id) => {
-      const method = methods.find((m) => m.id === id);
-      if (method) onSelect(structuredClone(method.data));
-    }}>
+    <Select
+      value={selected}
+      onValueChange={(id) => {
+        const method = methods.find((m) => m.id === id);
+        if (method) onSelect(structuredClone(method.data));
+        setSelected("");
+      }}
+    >
       <SelectTrigger className="w-full cursor-pointer text-xs h-8">
         <SelectValue placeholder="Load from saved..." />
       </SelectTrigger>
