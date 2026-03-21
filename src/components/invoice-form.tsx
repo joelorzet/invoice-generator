@@ -34,6 +34,7 @@ import { AddressForm } from "@/components/invoice/address-form";
 import { PaymentCard } from "@/components/invoice/payment-form";
 import { StorageConsentDialog } from "@/components/invoice/storage-consent-dialog";
 import { InvoiceHistory } from "@/components/invoice/invoice-history";
+import { SavedPaymentMethods } from "@/components/invoice/saved-payment-methods";
 import {
   Plus,
   Trash2,
@@ -316,6 +317,13 @@ export function InvoiceForm() {
     },
     [doDownload]
   );
+
+  const handleUseSavedPayment = useCallback((payment: PaymentDetail) => {
+    setInvoice((prev) => ({
+      ...prev,
+      payment_details: [...prev.payment_details, payment],
+    }));
+  }, []);
 
   const handleEnableStorage = useCallback(() => {
     pendingDownload.current = false;
@@ -659,12 +667,16 @@ export function InvoiceForm() {
 
       {/* Invoice History (full width, below the form) */}
       {storageEnabled && (
-        <div className="mt-10">
+        <div className="mt-10 space-y-10">
           <InvoiceHistory
             onLoad={handleLoadInvoice}
             onDownload={handleDownloadFromHistory}
             onNew={handleNewInvoice}
             refreshKey={historyRefresh}
+          />
+          <SavedPaymentMethods
+            refreshKey={historyRefresh}
+            onUse={handleUseSavedPayment}
           />
         </div>
       )}

@@ -1,9 +1,11 @@
-import type { InvoiceData } from "../invoice-types";
+import type { InvoiceData, PaymentDetail } from "../invoice-types";
 import type {
   IConsentService,
   StorageConsent,
   IInvoiceStorageService,
   SavedInvoice,
+  IPaymentMethodStorageService,
+  SavedPaymentMethod,
   IPdfService,
   IInvoiceService,
 } from "../interfaces";
@@ -12,6 +14,7 @@ export class InvoiceService implements IInvoiceService {
   constructor(
     private consent: IConsentService,
     private storage: IInvoiceStorageService,
+    private paymentMethods: IPaymentMethodStorageService,
     private pdf: IPdfService
   ) {}
 
@@ -33,6 +36,7 @@ export class InvoiceService implements IInvoiceService {
   async clearAllData(): Promise<void> {
     this.consent.clear();
     await this.storage.clearAll();
+    await this.paymentMethods.clearAll();
   }
 
   async getAll(): Promise<SavedInvoice[]> {
@@ -41,6 +45,19 @@ export class InvoiceService implements IInvoiceService {
 
   async delete(id: string): Promise<void> {
     return this.storage.delete(id);
+  }
+
+  // Payment Methods
+  async savePaymentMethod(label: string, data: PaymentDetail, existingId?: string): Promise<SavedPaymentMethod> {
+    return this.paymentMethods.save(label, data, existingId);
+  }
+
+  async getAllPaymentMethods(): Promise<SavedPaymentMethod[]> {
+    return this.paymentMethods.getAll();
+  }
+
+  async deletePaymentMethod(id: string): Promise<void> {
+    return this.paymentMethods.delete(id);
   }
 
   downloadOnly(data: InvoiceData): void {

@@ -1,12 +1,8 @@
-import { openDB, type IDBPDatabase } from "idb";
 import type { InvoiceData } from "../invoice-types";
 import { calculateTotal } from "../invoice-types";
 import type { IConsentService } from "../interfaces";
 import type { SavedInvoice, IInvoiceStorageService } from "../interfaces";
-
-const DB_NAME = "invoice-generator";
-const DB_VERSION = 1;
-const STORE_NAME = "invoices";
+import { getDB, INVOICES_STORE as STORE_NAME } from "./db";
 
 export class InvoiceStorageService implements IInvoiceStorageService {
   constructor(private consent: IConsentService) {}
@@ -15,24 +11,12 @@ export class InvoiceStorageService implements IInvoiceStorageService {
     return `inv_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
   }
 
-  private async getDB(): Promise<IDBPDatabase> {
-    return openDB(DB_NAME, DB_VERSION, {
-      upgrade(db) {
-        if (!db.objectStoreNames.contains(STORE_NAME)) {
-          const store = db.createObjectStore(STORE_NAME, { keyPath: "id" });
-          store.createIndex("by_date", "created_at");
-          store.createIndex("by_number", "invoice_number");
-        }
-      },
-    });
-  }
-
   async save(data: InvoiceData, existingId?: string): Promise<SavedInvoice> {
     if (!this.consent.isGranted()) {
       throw new Error("Storage consent not granted");
     }
 
-    const db = await this.getDB();
+    const db = await getDB();
     const now = new Date().toISOString();
     const total = calculateTotal(data.items, data.tax.rate);
 
@@ -57,7 +41,7 @@ export class InvoiceStorageService implements IInvoiceStorageService {
   async getAll(): Promise<SavedInvoice[]> {
     if (!this.consent.isGranted()) return [];
     try {
-      const db = await this.getDB();
+      const db = await getDB();
       const all = await db.getAll(STORE_NAME);
       return all.sort(
         (a, b) =>
@@ -70,18 +54,18 @@ export class InvoiceStorageService implements IInvoiceStorageService {
 
   async getById(id: string): Promise<SavedInvoice | undefined> {
     if (!this.consent.isGranted()) return undefined;
-    const db = await this.getDB();
+    const db = await getDB();
     return db.get(STORE_NAME, id);
   }
 
   async delete(id: string): Promise<void> {
-    const db = await this.getDB();
+    const db = await getDB();
     await db.delete(STORE_NAME, id);
   }
 
   async clearAll(): Promise<void> {
     try {
-      const db = await this.getDB();
+      const db = await getDB();
       await db.clear(STORE_NAME);
     } catch {
       // DB might not exist yet
