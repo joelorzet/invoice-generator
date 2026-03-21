@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CreditCard, Wallet, Plus, Trash2, Save, X } from "lucide-react";
+import { CreditCard, Wallet, Plus, Trash2, Save, Pencil, X } from "lucide-react";
 import type { PaymentDetail, BankPayment, CryptoPayment } from "@/lib/invoice-types";
 import type { SavedPaymentMethod } from "@/lib/services";
 import { getInvoiceService } from "@/lib/services";
@@ -220,7 +220,7 @@ export function SavedPaymentMethods({ refreshKey, onUse }: SavedPaymentMethodsPr
                   className="cursor-pointer text-muted-foreground hover:text-primary"
                   aria-label="Edit"
                 >
-                  <Save className="size-3" />
+                  <Pencil className="size-3" />
                 </Button>
                 <Button
                   variant="ghost"
