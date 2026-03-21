@@ -8,6 +8,7 @@ import {
   calculateTotal,
   formatCurrency,
   formatDate,
+  getInvoiceTheme,
 } from "./invoice-types";
 
 export function generateInvoicePDF(data: InvoiceData): jsPDF {
@@ -19,10 +20,24 @@ export function generateInvoicePDF(data: InvoiceData): jsPDF {
   const rightEdge = pageWidth - margin;
   const showLabels = data.settings.showAddressLabels;
 
-  // Colors
-  const dark = "#1e293b";
-  const muted = "#475569";
-  const headerBg = "#4a4a4a";
+  // Colors from theme
+  const theme = getInvoiceTheme(data.settings);
+  const dark = theme.text;
+  const muted = theme.muted;
+  const headerBg = theme.headerBg;
+
+  // Create a very light tint of the primary color (mix with white at ~8%)
+  function lightTint(hex: string, amount = 0.08): string {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    const tr = Math.round(r + (255 - r) * (1 - amount));
+    const tg = Math.round(g + (255 - g) * (1 - amount));
+    const tb = Math.round(b + (255 - b) * (1 - amount));
+    return `#${tr.toString(16).padStart(2, "0")}${tg.toString(16).padStart(2, "0")}${tb.toString(16).padStart(2, "0")}`;
+  }
+  const accentBg = lightTint(theme.primary);
+  const accentBorder = lightTint(theme.primary, 0.2);
 
   // Helper: check if we need a new page
   function ensureSpace(needed: number, currentY: number): number {
@@ -41,19 +56,21 @@ export function generateInvoicePDF(data: InvoiceData): jsPDF {
   ): number {
     let ay = startY;
     doc.setFontSize(9);
-    for (const line of lines) {
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const isName = i === 0;
       if (line.label) {
         doc.setFont("helvetica", "bold");
         doc.setTextColor(muted);
         const labelText = line.label + ": ";
         doc.text(labelText, x, ay);
         const labelW = doc.getTextWidth(labelText);
-        doc.setFont("helvetica", "normal");
+        doc.setFont("helvetica", isName ? "bold" : "normal");
         doc.setTextColor(dark);
         doc.text(line.value, x + labelW, ay);
       } else {
-        doc.setFont("helvetica", "normal");
-        doc.setTextColor(muted);
+        doc.setFont("helvetica", isName ? "bold" : "normal");
+        doc.setTextColor(isName ? dark : muted);
         doc.text(line.value, x, ay);
       }
       ay += 13;
@@ -61,19 +78,36 @@ export function generateInvoicePDF(data: InvoiceData): jsPDF {
     return ay;
   }
 
-  let y = margin + 32;
+  let y = margin;
 
-  // ── INVOICE title (right) ──
+  // ── Logo + INVOICE title ──
+  if (data.logo) {
+    try {
+      const logoHeight = 50;
+      const img = new Image();
+      img.src = data.logo;
+      const aspect = img.width / img.height || 1;
+      const logoWidth = logoHeight * aspect;
+      doc.addImage(data.logo, "PNG", margin, y, logoWidth, logoHeight);
+    } catch {
+      // Skip logo if it fails to load
+    }
+  }
+
+  y += 32;
   doc.setFontSize(32);
   doc.setFont("helvetica", "bold");
-  doc.setTextColor(dark);
+  doc.setTextColor(theme.primary);
   doc.text("INVOICE", rightEdge, y, { align: "right" });
+
+  if (data.logo) y += 24;
 
   // ── From + Bill To (left) | Metadata (right) ──
   y += 32;
   const sectionStartY = y;
 
   // From
+  const colWidth = Math.floor(contentWidth / 3);
   doc.setFontSize(9);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(dark);
@@ -82,7 +116,7 @@ export function generateInvoicePDF(data: InvoiceData): jsPDF {
   const leftY = drawAddress(fromLines, margin, y + 14);
 
   // Bill To
-  const billX = margin + 200;
+  const billX = margin + colWidth;
   doc.setFont("helvetica", "bold");
   doc.setTextColor(dark);
   doc.text("Bill To:", billX, sectionStartY);
@@ -90,7 +124,7 @@ export function generateInvoicePDF(data: InvoiceData): jsPDF {
   const billEndY = drawAddress(billLines, billX, sectionStartY + 14);
 
   // Metadata (right)
-  const metaLabelX = rightEdge - 170;
+  const metaLabelX = margin + colWidth * 2;
   let metaY = sectionStartY;
   doc.setFontSize(9);
   doc.setTextColor(dark);
@@ -170,7 +204,7 @@ export function generateInvoicePDF(data: InvoiceData): jsPDF {
     margin: { left: margin, right: margin },
     headStyles: {
       fillColor: headerBg,
-      textColor: "#ffffff",
+      textColor: theme.headerText,
       fontStyle: "bold",
       fontSize: 10,
       cellPadding: 8,
@@ -267,8 +301,12 @@ export function generateInvoicePDF(data: InvoiceData): jsPDF {
           lines.push({ label: "Network", value: payment.network });
         if (payment.address)
           lines.push({ label: "Wallet", value: payment.address });
-        if (payment.currency)
-          lines.push({ label: "Currency", value: payment.currency });
+        if (payment.currency) {
+          const currencyValue = payment.contract
+            ? `${payment.currency} - ${payment.contract}`
+            : payment.currency;
+          lines.push({ label: "Currency", value: currencyValue });
+        }
         if (payment.memo)
           lines.push({ label: "Memo / Tag", value: payment.memo });
       }
@@ -279,8 +317,8 @@ export function generateInvoicePDF(data: InvoiceData): jsPDF {
       y = ensureSpace(boxHeight + 10, y);
       const boxStartY = y;
 
-      doc.setFillColor("#fafafa");
-      doc.setDrawColor("#cccccc");
+      doc.setFillColor(accentBg);
+      doc.setDrawColor(accentBorder);
       doc.roundedRect(margin, boxStartY, contentWidth, boxHeight, 3, 3, "FD");
 
       doc.setFontSize(9);

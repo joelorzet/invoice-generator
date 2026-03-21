@@ -1,6 +1,7 @@
 import { InvoiceForm } from "@/components/invoice-form";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { FileText, Zap, Shield, DollarSign, ArrowRight } from "lucide-react";
+import { GitHubStars } from "@/components/github-stars";
+import { FileText, Zap, Shield, DollarSign, ArrowRight, Database, Palette, CreditCard, Wallet, Lock } from "lucide-react";
 
 const features = [
   {
@@ -13,7 +14,7 @@ const features = [
     icon: Shield,
     title: "No Signup Required",
     description:
-      "Start creating invoices instantly. Your data stays in your browser.",
+      "Start creating invoices instantly. No accounts, no emails, no passwords.",
   },
   {
     icon: Zap,
@@ -26,6 +27,30 @@ const features = [
     title: "Professional Format",
     description:
       "Clean, business-ready invoices with itemized billing and payment details.",
+  },
+  {
+    icon: Database,
+    title: "Browser-Based Storage",
+    description:
+      "Save company profiles, client details, and bank accounts locally using IndexedDB. Nothing leaves your device.",
+  },
+  {
+    icon: CreditCard,
+    title: "Bank & Crypto Payments",
+    description:
+      "Add bank transfer or cryptocurrency payment details. Save them for quick reuse across invoices.",
+  },
+  {
+    icon: Palette,
+    title: "Theme Customization",
+    description:
+      "Choose from professional color themes or create your own. Your brand, your invoice.",
+  },
+  {
+    icon: Wallet,
+    title: "Multi-Currency & Tax",
+    description:
+      "Support for 10+ currencies with automatic tax presets. VAT, GST, IVA,all built in.",
   },
 ];
 
@@ -52,10 +77,11 @@ export default function Home() {
               href="https://joelorzet.dev"
               className="hidden sm:inline-flex text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer px-3 py-1.5"
               target="_blank"
-            rel="noopener noreferrer"
+              rel="noopener noreferrer"
             >
               Portfolio
             </a>
+            <GitHubStars />
             <ThemeToggle />
             <a
               href="#generator"
@@ -137,6 +163,40 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Privacy */}
+      <section className="py-16 bg-secondary/30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-3xl mx-auto text-center">
+            <div className="size-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+              <Lock className="size-6 text-primary" />
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-4">
+              Your data never leaves your browser
+            </h2>
+            <p className="text-muted-foreground leading-relaxed mb-6">
+              We don&apos;t have servers, databases, or analytics tracking your invoices.
+              Everything,your company details, client addresses, bank accounts, and
+              crypto wallets,is stored locally in your browser using IndexedDB.
+              PDFs are generated entirely on your device. Nothing is ever uploaded or transmitted.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+              <div className="rounded-lg border border-border bg-card p-4">
+                <p className="font-semibold text-foreground mb-1">No servers</p>
+                <p className="text-muted-foreground">Zero backend. All processing happens in your browser.</p>
+              </div>
+              <div className="rounded-lg border border-border bg-card p-4">
+                <p className="font-semibold text-foreground mb-1">No tracking</p>
+                <p className="text-muted-foreground">No cookies, no analytics on your invoice data.</p>
+              </div>
+              <div className="rounded-lg border border-border bg-card p-4">
+                <p className="font-semibold text-foreground mb-1">Your control</p>
+                <p className="text-muted-foreground">Clear all stored data anytime with one click.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Generator */}
       <section id="generator" className="py-16 bg-secondary/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -154,7 +214,7 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border py-10">
+      <footer className="border-t border-border py-10 bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">

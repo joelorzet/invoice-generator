@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef, useMemo } from "react";
+import { useState, useCallback, useRef, useMemo, useEffect, useSyncExternalStore, type ChangeEvent } from "react";
 import { sileo } from "sileo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,21 +18,29 @@ import {
 import {
   InvoiceData,
   InvoiceItem,
+  InvoiceTheme,
   PaymentDetail,
   BankPayment,
   CryptoPayment,
   createDefaultInvoice,
+  INVOICE_THEMES,
 } from "@/lib/invoice-types";
 import { getPresetsForCurrency } from "@/lib/tax-presets";
+import { getBankFields } from "@/components/invoice/payment-form";
 import {
   getInvoiceService,
   type SavedInvoice,
+  type SavedPaymentMethod,
+  type SavedAddressProfile,
 } from "@/lib/services";
 import { InvoicePreview } from "@/components/invoice-preview";
 import { AddressForm } from "@/components/invoice/address-form";
 import { PaymentCard } from "@/components/invoice/payment-form";
 import { StorageConsentDialog } from "@/components/invoice/storage-consent-dialog";
 import { InvoiceHistory } from "@/components/invoice/invoice-history";
+import { SavedPaymentMethods } from "@/components/invoice/saved-payment-methods";
+import { SavedAddressProfiles } from "@/components/invoice/saved-address-profiles";
+import { ConfirmDialog } from "@/components/invoice/confirm-dialog";
 import {
   Plus,
   Trash2,
@@ -43,6 +51,10 @@ import {
   Tag,
   HardDrive,
   Trash,
+  History,
+  ImagePlus,
+  RotateCcw,
+  AlertTriangle,
 } from "lucide-react";
 
 const CURRENCIES = [
@@ -57,15 +69,48 @@ export function InvoiceForm() {
   const [invoice, setInvoice] = useState<InvoiceData>(createDefaultInvoice);
   const [editingId, setEditingId] = useState<string | undefined>(undefined);
   const [consentDialogOpen, setConsentDialogOpen] = useState(false);
-  const [storageEnabled, setStorageEnabled] = useState(
-    () => !!svc?.isStorageEnabled()
-  );
-  const [consentDenied, setConsentDenied] = useState(
-    () => !!(svc && !svc.isStorageEnabled() && svc.getConsent() === "denied")
-  );
+  const [storageEnabled, setStorageEnabled] = useState(false);
+  const [consentDenied, setConsentDenied] = useState(false);
   const [historyRefresh, setHistoryRefresh] = useState(0);
   const [taxPreset, setTaxPreset] = useState("custom");
+  const [hasPrevious, setHasPrevious] = useState(false);
+  const [clearFormOpen, setClearFormOpen] = useState(false);
+  const [clearAllOpen, setClearAllOpen] = useState(false);
+  const [savedPayments, setSavedPayments] = useState<SavedPaymentMethod[]>([]);
+  const [savedFromProfiles, setSavedFromProfiles] = useState<SavedAddressProfile[]>([]);
+  const [savedClientProfiles, setSavedClientProfiles] = useState<SavedAddressProfile[]>([]);
   const pendingDownload = useRef(false);
+  const previousInvoice = useRef<InvoiceData | null>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
+
+  // Check consent state after hydration
+  const consentSnapshot = useSyncExternalStore(
+    () => () => {},
+    () => svc?.getConsent() ?? null,
+    () => null
+  );
+  const derivedStorageEnabled = consentSnapshot === "granted";
+  const derivedConsentDenied = consentSnapshot === "denied";
+  if (derivedStorageEnabled !== storageEnabled) setStorageEnabled(derivedStorageEnabled);
+  if (derivedConsentDenied !== consentDenied) setConsentDenied(derivedConsentDenied);
+
+  // Load saved payment methods and address profiles
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!svc || !storageEnabled) return;
+      const [payments, fromProfiles, clientProfiles] = await Promise.all([
+        svc.getAllPaymentMethods(),
+        svc.getAddressProfiles("from"),
+        svc.getAddressProfiles("client"),
+      ]);
+      if (cancelled) return;
+      setSavedPayments(payments);
+      setSavedFromProfiles(fromProfiles);
+      setSavedClientProfiles(clientProfiles);
+    })();
+    return () => { cancelled = true; };
+  }, [svc, storageEnabled, historyRefresh]);
 
   const updateField = useCallback(
     <K extends keyof InvoiceData>(key: K, value: InvoiceData[K]) => {
@@ -158,7 +203,18 @@ export function InvoiceForm() {
     (index: number, field: string, value: string) => {
       setInvoice((prev) => {
         const payments = [...prev.payment_details];
-        payments[index] = { ...payments[index], [field]: value } as PaymentDetail;
+        let updated = { ...payments[index], [field]: value } as PaymentDetail;
+
+        if (field === "account_currency" && updated.type === "bank") {
+          const visible = getBankFields(value);
+          if (!visible.routing_number) updated = { ...updated, routing_number: "" };
+          if (!visible.account_number) updated = { ...updated, account_number: "" };
+          if (!visible.account_type) updated = { ...updated, account_type: "" };
+          if (!visible.swift) updated = { ...updated, swift: "" };
+          if (!visible.iban) updated = { ...updated, iban: "" };
+        }
+
+        payments[index] = updated;
         return { ...prev, payment_details: payments };
       });
     },
@@ -227,10 +283,11 @@ export function InvoiceForm() {
 
   const handleLoadInvoice = useCallback((saved: SavedInvoice) => {
     const data = saved.data;
-    // Ensure settings field exists (backward compat)
     if (!data.settings) {
       data.settings = { showAddressLabels: false };
     }
+    previousInvoice.current = null;
+    setHasPrevious(false);
     setInvoice(data);
     setEditingId(saved.id);
     sileo.success({
@@ -240,16 +297,15 @@ export function InvoiceForm() {
   }, []);
 
   const handleNewInvoice = useCallback(() => {
+    previousInvoice.current = structuredClone(invoice);
+    setHasPrevious(true);
     setEditingId(undefined);
     const next = createDefaultInvoice();
     const current = invoice.invoice_metadata.invoice_number;
 
-    // Pure numeric: "5" → "6"
     if (/^\d+$/.test(current)) {
       next.invoice_metadata.invoice_number = String(Number(current) + 1);
-    }
-    // Prefix + number: "INV-001" → "INV-002", "INV003" → "INV004"
-    else {
+    } else {
       const match = current.match(/^(.+?)(\d+)$/);
       if (match) {
         const [, prefix, numStr] = match;
@@ -258,22 +314,48 @@ export function InvoiceForm() {
       }
     }
 
-    // Keep the same From, payment details, currency, tax, and settings
-    next.from = invoice.from;
-    next.payment_details = invoice.payment_details;
-    next.currency = invoice.currency;
-    next.tax = invoice.tax;
-    next.settings = invoice.settings;
-
     setInvoice(next);
   }, [invoice]);
 
-  const handleClearData = useCallback(() => {
+  const handlePrefillFromPrevious = useCallback(() => {
+    const prev = previousInvoice.current;
+    if (!prev) return;
+
+    setInvoice((current) => ({
+      ...current,
+      from: prev.from,
+      payment_details: prev.payment_details,
+      currency: prev.currency,
+      tax: prev.tax,
+      settings: prev.settings,
+      logo: prev.logo,
+    }));
+
+    const presets = getPresetsForCurrency(prev.currency);
+    const match = presets.find((p) => p.rate === prev.tax.rate && p.description === prev.tax.description);
+    setTaxPreset(match ? match.label : "custom");
+
+    previousInvoice.current = null;
+    setHasPrevious(false);
+  }, []);
+
+  const handleClearForm = useCallback(() => {
+    const number = invoice.invoice_metadata.invoice_number;
+    const next = createDefaultInvoice();
+    next.invoice_metadata.invoice_number = number;
+    setInvoice(next);
+    setEditingId(undefined);
+    setClearFormOpen(false);
+    sileo.success({ title: "Form Cleared", description: "The invoice form has been reset." });
+  }, [invoice.invoice_metadata.invoice_number]);
+
+  const handleClearAllData = useCallback(() => {
     svc?.clearAllData();
     setStorageEnabled(false);
     setConsentDenied(false);
     setHistoryRefresh((n) => n + 1);
-    sileo.success({ title: "Data Cleared", description: "All saved invoices and preferences have been removed." });
+    setClearAllOpen(false);
+    sileo.success({ title: "All Data Cleared", description: "All saved invoices, payment methods, and address profiles have been removed." });
   }, [svc]);
 
   const handleDownloadFromHistory = useCallback(
@@ -285,14 +367,67 @@ export function InvoiceForm() {
     [doDownload]
   );
 
+  const handleUseSavedPayment = useCallback((payment: PaymentDetail) => {
+    setInvoice((prev) => ({
+      ...prev,
+      payment_details: [...prev.payment_details, payment],
+    }));
+  }, []);
+
   const handleEnableStorage = useCallback(() => {
     pendingDownload.current = false;
     setConsentDialogOpen(true);
   }, []);
 
+  const handleLogoUpload = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const maxSize = 400;
+        let { width, height } = img;
+        if (width > maxSize || height > maxSize) {
+          const ratio = Math.min(maxSize / width, maxSize / height);
+          width = Math.round(width * ratio);
+          height = Math.round(height * ratio);
+        }
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext("2d")!.drawImage(img, 0, 0, width, height);
+        const dataUrl = canvas.toDataURL("image/png", 0.9);
+        updateField("logo", dataUrl);
+      };
+      img.src = reader.result as string;
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  }, [updateField]);
+
   return (
     <>
       <StorageConsentDialog open={consentDialogOpen} onConsent={handleConsent} />
+      <ConfirmDialog
+        open={clearFormOpen}
+        icon={RotateCcw}
+        title="Clear invoice form?"
+        description="This will reset all fields in the current invoice to their defaults. Your saved data (invoices, payment methods, address profiles) will not be affected."
+        confirmLabel="Clear form"
+        onConfirm={handleClearForm}
+        onCancel={() => setClearFormOpen(false)}
+      />
+      <ConfirmDialog
+        open={clearAllOpen}
+        icon={AlertTriangle}
+        title="Delete all saved data?"
+        description="This will permanently remove all saved invoices, payment methods, and address profiles from your browser. This action cannot be undone."
+        confirmLabel="Delete everything"
+        onConfirm={handleClearAllData}
+        onCancel={() => setClearAllOpen(false)}
+      />
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
         {/* LEFT: Form */}
@@ -300,10 +435,23 @@ export function InvoiceForm() {
           {/* Invoice Details */}
           <Card>
             <CardHeader className="pb-4">
-              <CardTitle className="text-base flex items-center gap-2">
-                <FileText className="size-4 text-primary" />
-                Invoice Details
-              </CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <FileText className="size-5 text-primary" />
+                  Invoice Details
+                </CardTitle>
+                {hasPrevious && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handlePrefillFromPrevious}
+                    className="cursor-pointer text-xs"
+                  >
+                    <History className="size-3.5 mr-1" />
+                    Prefill from previous
+                  </Button>
+                )}
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-3 gap-3">
@@ -399,6 +547,60 @@ export function InvoiceForm() {
                   />
                 </div>
               </div>
+              {/* Theme selector */}
+              <div>
+                <Label className="text-xs text-muted-foreground mb-2 block">Invoice Theme</Label>
+                <div className="grid grid-cols-4 gap-2">
+                  {Object.entries(INVOICE_THEMES).map(([key, t]) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => updateField("settings", { ...invoice.settings, themeName: key })}
+                      className={`flex items-center justify-center gap-1.5 rounded-md border py-1.5 text-xs cursor-pointer transition-colors ${
+                        (invoice.settings.themeName || "classic") === key
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border text-muted-foreground hover:border-primary/50"
+                      }`}
+                    >
+                      <span className="size-3 rounded-full shrink-0" style={{ backgroundColor: t.headerBg }} />
+                      {key.charAt(0).toUpperCase() + key.slice(1)}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => updateField("settings", { ...invoice.settings, themeName: "custom" })}
+                    className={`flex items-center justify-center gap-1.5 rounded-md border col-span-2 py-1.5 text-xs cursor-pointer transition-colors ${
+                      invoice.settings.themeName === "custom"
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border text-muted-foreground hover:border-primary/50"
+                    }`}
+                  >
+                    Custom
+                  </button>
+                </div>
+                {invoice.settings.themeName === "custom" && (
+                  <div className="grid grid-cols-5 gap-2 mt-3">
+                    {(["primary", "text", "muted", "headerBg", "headerText"] as const).map((field) => (
+                      <div key={field}>
+                        <Label className="text-[10px] text-muted-foreground">{field === "headerBg" ? "Header" : field === "headerText" ? "Header Text" : field.charAt(0).toUpperCase() + field.slice(1)}</Label>
+                        <input
+                          type="color"
+                          value={(invoice.settings.customTheme?.[field]) || INVOICE_THEMES.classic[field]}
+                          onChange={(e) => {
+                            const current: InvoiceTheme = invoice.settings.customTheme || { ...INVOICE_THEMES.classic };
+                            updateField("settings", {
+                              ...invoice.settings,
+                              themeName: "custom",
+                              customTheme: { ...current, [field]: e.target.value },
+                            });
+                          }}
+                          className="mt-1 w-full h-8 rounded border border-border cursor-pointer"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
               {/* Settings row */}
               <div className="flex items-center justify-between gap-4 pt-1">
                 <label className="flex items-center gap-2 cursor-pointer text-sm text-muted-foreground select-none">
@@ -416,15 +618,13 @@ export function InvoiceForm() {
                   <Tag className="size-3.5" />
                   Show address labels
                 </label>
-                {storageEnabled && (
-                  <button
-                    onClick={handleClearData}
-                    className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-destructive transition-colors cursor-pointer"
-                  >
-                    <Trash className="size-3" />
-                    Clear saved data
-                  </button>
-                )}
+                <button
+                  onClick={() => setClearFormOpen(true)}
+                  className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-destructive transition-colors cursor-pointer"
+                >
+                  <RotateCcw className="size-3" />
+                  Clear form
+                </button>
                 {!storageEnabled && consentDenied && (
                   <button
                     onClick={handleEnableStorage}
@@ -440,10 +640,60 @@ export function InvoiceForm() {
 
           {/* Addresses */}
           <Card>
-            <CardContent className="pt-6">
+            <CardContent className="pt-6 space-y-6">
+              {/* Logo upload */}
+              <div>
+                <Label className="text-xs text-muted-foreground mb-2 block">Company Logo (optional)</Label>
+                <input
+                  ref={logoInputRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/svg+xml"
+                  onChange={handleLogoUpload}
+                  className="hidden"
+                />
+                {invoice.logo ? (
+                  <div
+                    onClick={() => logoInputRef.current?.click()}
+                    className="inline-flex items-center gap-3 cursor-pointer group"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={invoice.logo} alt="Company logo" className="h-12 w-auto object-contain rounded border border-border" />
+                    <span className="text-xs text-muted-foreground group-hover:text-primary transition-colors">Click to change</span>
+                    <Button
+                      variant="ghost"
+                      size="icon-xs"
+                      onClick={(e) => { e.stopPropagation(); updateField("logo", ""); }}
+                      className="cursor-pointer text-muted-foreground hover:text-destructive"
+                      aria-label="Remove logo"
+                    >
+                      <Trash className="size-3" />
+                    </Button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => logoInputRef.current?.click()}
+                    className="flex items-center gap-2 rounded-md border border-dashed border-border px-4 py-3 text-sm text-muted-foreground hover:text-primary hover:border-primary transition-colors cursor-pointer"
+                  >
+                    <ImagePlus className="size-4" />
+                    Upload logo
+                  </button>
+                )}
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <AddressForm title="From" data={invoice.from} onChange={(f, v) => updateNested("from", f, v)} />
-                <AddressForm title="Bill To" data={invoice.bill_to} onChange={(f, v) => updateNested("bill_to", f, v)} />
+                <AddressForm
+                  title="From"
+                  data={invoice.from}
+                  onChange={(f, v) => updateNested("from", f, v)}
+                  savedProfiles={savedFromProfiles}
+                  onLoadSaved={(data) => updateField("from", data)}
+                />
+                <AddressForm
+                  title="Bill To"
+                  data={invoice.bill_to}
+                  onChange={(f, v) => updateNested("bill_to", f, v)}
+                  savedProfiles={savedClientProfiles}
+                  onLoadSaved={(data) => updateField("bill_to", data)}
+                />
               </div>
             </CardContent>
           </Card>
@@ -493,6 +743,14 @@ export function InvoiceForm() {
                   payment={payment}
                   onUpdate={(field, value) => updatePayment(i, field, value)}
                   onRemove={() => removePayment(i)}
+                  savedMethods={savedPayments}
+                  onPrefill={(data) => {
+                    setInvoice((prev) => {
+                      const payments = [...prev.payment_details];
+                      payments[i] = data;
+                      return { ...prev, payment_details: payments };
+                    });
+                  }}
                 />
               ))}
 
@@ -546,15 +804,43 @@ export function InvoiceForm() {
         </div>
       </div>
 
-      {/* Invoice History (full width, below the form) */}
+      {/* Saved Data (full width, below the form) */}
       {storageEnabled && (
-        <div className="mt-10">
-          <InvoiceHistory
-            onLoad={handleLoadInvoice}
-            onDownload={handleDownloadFromHistory}
-            onNew={handleNewInvoice}
-            refreshKey={historyRefresh}
-          />
+        <div className="mt-10 space-y-6">
+          <Card>
+            <CardContent className="pt-6">
+              <InvoiceHistory
+                onLoad={handleLoadInvoice}
+                onDownload={handleDownloadFromHistory}
+                onNew={handleNewInvoice}
+                refreshKey={historyRefresh}
+              />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <SavedPaymentMethods
+                refreshKey={historyRefresh}
+                onUse={handleUseSavedPayment}
+              />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <SavedAddressProfiles
+                refreshKey={historyRefresh}
+              />
+            </CardContent>
+          </Card>
+          <div className="flex justify-end">
+            <button
+              onClick={() => setClearAllOpen(true)}
+              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-destructive transition-colors cursor-pointer"
+            >
+              <Trash className="size-3" />
+              Clear all saved data
+            </button>
+          </div>
         </div>
       )}
     </>

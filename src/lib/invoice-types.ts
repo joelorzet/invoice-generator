@@ -3,6 +3,7 @@ export interface Address {
   address: string;
   city: string;
   state: string;
+  zip?: string;
   country: string;
   vat?: string;
 }
@@ -43,13 +44,76 @@ export interface CryptoPayment {
   network: string;
   address: string;
   currency: string;
+  contract?: string;
   memo?: string;
 }
 
 export type PaymentDetail = BankPayment | CryptoPayment;
 
+export interface InvoiceTheme {
+  primary: string;
+  text: string;
+  muted: string;
+  headerBg: string;
+  headerText: string;
+}
+
+export const INVOICE_THEMES: Record<string, InvoiceTheme> = {
+  classic: {
+    primary: "#334155",
+    text: "#1e293b",
+    muted: "#64748b",
+    headerBg: "#475569",
+    headerText: "#f8fafc",
+  },
+  slate: {
+    primary: "#4b5563",
+    text: "#1f2937",
+    muted: "#6b7280",
+    headerBg: "#6b7280",
+    headerText: "#f9fafb",
+  },
+  ocean: {
+    primary: "#2c5282",
+    text: "#1e293b",
+    muted: "#64748b",
+    headerBg: "#2c5282",
+    headerText: "#f0f9ff",
+  },
+  forest: {
+    primary: "#2f6b4f",
+    text: "#1e293b",
+    muted: "#64748b",
+    headerBg: "#2f6b4f",
+    headerText: "#f0fdf4",
+  },
+  wine: {
+    primary: "#7c3044",
+    text: "#1e293b",
+    muted: "#6b7280",
+    headerBg: "#7c3044",
+    headerText: "#fdf2f8",
+  },
+  minimal: {
+    primary: "#1f2937",
+    text: "#1f2937",
+    muted: "#6b7280",
+    headerBg: "#d1d5db",
+    headerText: "#111827",
+  },
+};
+
+export function getInvoiceTheme(settings: InvoiceSettings): InvoiceTheme {
+  if (settings.themeName === "custom" && settings.customTheme) {
+    return settings.customTheme;
+  }
+  return INVOICE_THEMES[settings.themeName || "classic"] || INVOICE_THEMES.classic;
+}
+
 export interface InvoiceSettings {
   showAddressLabels: boolean;
+  themeName?: string;
+  customTheme?: InvoiceTheme;
 }
 
 export interface InvoiceData {
@@ -62,6 +126,7 @@ export interface InvoiceData {
   payment_details: PaymentDetail[];
   notes: string;
   settings: InvoiceSettings;
+  logo?: string;
 }
 
 export function createDefaultInvoice(): InvoiceData {
@@ -129,13 +194,14 @@ export function buildAddressLines(
   addr: Address,
   showLabels: boolean
 ): AddressLine[] {
+  const { name, address, city, state, zip, country, vat } = addr;
   const lines: AddressLine[] = [];
-  if (addr.name) lines.push({ label: "Name", value: addr.name });
-  if (addr.address) lines.push({ label: "Address", value: addr.address });
-  const cityState = [addr.city, addr.state].filter(Boolean).join(", ");
-  if (cityState) lines.push({ label: "City", value: cityState });
-  if (addr.country) lines.push({ label: "Country", value: addr.country });
-  if (addr.vat) lines.push({ label: "VAT", value: addr.vat });
+  if (name) lines.push({ label: "Name", value: name });
+  if (address) lines.push({ label: "Address", value: address });
+  const cityStateZip = [city, state, zip].filter(Boolean).join(", ");
+  if (cityStateZip) lines.push({ label: "City", value: cityStateZip });
+  if (country) lines.push({ label: "Country", value: country });
+  if (vat) lines.push({ label: "VAT", value: vat });
   return showLabels
     ? lines
     : lines.map((l) => ({ label: "", value: l.value }));

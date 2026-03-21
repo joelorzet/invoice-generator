@@ -96,7 +96,7 @@ export function InvoiceHistory({
       <div>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-            <History className="size-4 text-primary" />
+            <History className="size-5 text-primary" />
             Previous Invoices
           </h3>
           <Button
@@ -153,7 +153,7 @@ export function InvoiceHistory({
                           e.stopPropagation();
                           onDownload(inv);
                         }}
-                        className="cursor-pointer text-muted-foreground hover:text-primary"
+                        className="cursor-pointer text-foreground hover:text-primary"
                         aria-label={`Download invoice ${inv.invoice_number}`}
                       >
                         <Download className="size-3.5" />
@@ -165,7 +165,7 @@ export function InvoiceHistory({
                           e.stopPropagation();
                           setDeleteTarget(inv);
                         }}
-                        className="cursor-pointer text-muted-foreground hover:text-destructive"
+                        className="cursor-pointer text-foreground hover:text-destructive"
                         aria-label={`Delete invoice ${inv.invoice_number}`}
                       >
                         <Trash2 className="size-3.5" />
@@ -178,7 +178,7 @@ export function InvoiceHistory({
           </table>
 
           {/* Pagination */}
-          <div className="flex items-center justify-between border-t border-border bg-muted/30 px-4 py-2.5">
+          <div className="flex items-center justify-between border-t border-border bg-muted/50 px-4 py-2.5">
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <span>Rows</span>
               <Select
