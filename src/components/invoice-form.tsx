@@ -625,10 +625,18 @@ export function InvoiceForm() {
                   payment={payment}
                   onUpdate={(field, value) => updatePayment(i, field, value)}
                   onRemove={() => removePayment(i)}
+                  savedMethods={savedPayments}
+                  onPrefill={(data) => {
+                    setInvoice((prev) => {
+                      const payments = [...prev.payment_details];
+                      payments[i] = data;
+                      return { ...prev, payment_details: payments };
+                    });
+                  }}
                 />
               ))}
 
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex gap-2">
                 <Button variant="outline" size="sm" onClick={() => addPayment("bank")} className="cursor-pointer">
                   <CreditCard className="size-4 mr-1" />
                   Add Bank
@@ -637,26 +645,6 @@ export function InvoiceForm() {
                   <Wallet className="size-4 mr-1" />
                   Add Crypto
                 </Button>
-                {savedPayments.length > 0 && (
-                  <Select onValueChange={(id) => {
-                    const method = savedPayments.find((m) => m.id === id);
-                    if (method) handleUseSavedPayment(structuredClone(method.data));
-                  }}>
-                    <SelectTrigger className="w-auto cursor-pointer text-xs h-8 gap-1">
-                      <SelectValue placeholder="Use saved..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {savedPayments.map((m) => (
-                        <SelectItem key={m.id} value={m.id} className="cursor-pointer">
-                          <span className="flex items-center gap-1.5">
-                            {m.type === "bank" ? <CreditCard className="size-3" /> : <Wallet className="size-3" />}
-                            {m.label}
-                          </span>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
               </div>
             </CardContent>
           </Card>

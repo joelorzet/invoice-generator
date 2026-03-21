@@ -11,7 +11,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CreditCard, Wallet, X } from "lucide-react";
-import type { PaymentDetail } from "@/lib/invoice-types";
+import type { PaymentDetail, BankPayment } from "@/lib/invoice-types";
+import type { SavedPaymentMethod } from "@/lib/services";
 
 const CURRENCIES = [
   "USD", "EUR", "GBP", "ARS", "BRL", "CAD", "AUD", "JPY", "CHF", "MXN",
@@ -89,11 +90,17 @@ export function PaymentCard({
   payment,
   onUpdate,
   onRemove,
+  onPrefill,
+  savedMethods,
 }: {
   payment: PaymentDetail;
   onUpdate: (field: string, value: string) => void;
   onRemove: () => void;
+  onPrefill?: (data: PaymentDetail) => void;
+  savedMethods?: SavedPaymentMethod[];
 }) {
+  const matching = savedMethods?.filter((m) => m.type === payment.type) ?? [];
+
   return (
     <div className="relative rounded-md border border-border bg-muted/50 p-4 space-y-3">
       <Button
@@ -111,10 +118,29 @@ export function PaymentCard({
           const f = getBankFields(payment.account_currency);
           return (
             <>
-              <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <CreditCard className="size-4 text-primary" />
-                Bank Transfer
-              </h4>
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <CreditCard className="size-4 text-primary" />
+                  Bank Transfer
+                </h4>
+                {matching.length > 0 && onPrefill && (
+                  <Select onValueChange={(id) => {
+                    const method = matching.find((m) => m.id === id);
+                    if (method) onPrefill(structuredClone(method.data));
+                  }}>
+                    <SelectTrigger className="w-auto cursor-pointer text-xs h-7 gap-1">
+                      <SelectValue placeholder="Load saved..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {matching.map((m) => (
+                        <SelectItem key={m.id} value={m.id} className="cursor-pointer">
+                          {m.label} ({(m.data as BankPayment).account_currency})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
               <div>
                 <Label className="text-xs text-muted-foreground">Account Currency</Label>
                 <Select
@@ -146,10 +172,29 @@ export function PaymentCard({
         })()
       ) : (
         <>
-          <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-            <Wallet className="size-4 text-primary" />
-            Cryptocurrency
-          </h4>
+          <div className="flex items-center justify-between">
+            <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <Wallet className="size-4 text-primary" />
+              Cryptocurrency
+            </h4>
+            {matching.length > 0 && onPrefill && (
+              <Select onValueChange={(id) => {
+                const method = matching.find((m) => m.id === id);
+                if (method) onPrefill(structuredClone(method.data));
+              }}>
+                <SelectTrigger className="w-auto cursor-pointer text-xs h-7 gap-1">
+                  <SelectValue placeholder="Load saved..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {matching.map((m) => (
+                    <SelectItem key={m.id} value={m.id} className="cursor-pointer">
+                      {m.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Network" value={payment.network} onChange={(v) => onUpdate("network", v)} placeholder="e.g. Ethereum, Stellar, XRP" />
             <Field label="Currency" value={payment.currency} onChange={(v) => onUpdate("currency", v)} placeholder="e.g. USDT, XLM, XRP" />
