@@ -93,7 +93,7 @@ export function AnimatedDotsBg() {
         dot.x += dot.vx;
         dot.y += dot.vy;
 
-        const alpha = isLight ? dot.opacity * 0.7 : dot.opacity * 0.2;
+        const alpha = isLight ? dot.opacity * 0.7 : dot.opacity * 0.02;
         ctx.beginPath();
         ctx.arc(dot.x, dot.y, dot.size, 0, Math.PI * 2);
         ctx.fillStyle = isLight
