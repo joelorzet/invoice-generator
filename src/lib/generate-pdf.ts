@@ -8,6 +8,7 @@ import {
   calculateTotal,
   formatCurrency,
   formatDate,
+  getInvoiceTheme,
 } from "./invoice-types";
 
 export function generateInvoicePDF(data: InvoiceData): jsPDF {
@@ -19,10 +20,11 @@ export function generateInvoicePDF(data: InvoiceData): jsPDF {
   const rightEdge = pageWidth - margin;
   const showLabels = data.settings.showAddressLabels;
 
-  // Colors
-  const dark = "#1e293b";
-  const muted = "#475569";
-  const headerBg = "#4a4a4a";
+  // Colors from theme
+  const theme = getInvoiceTheme(data.settings);
+  const dark = theme.text;
+  const muted = theme.muted;
+  const headerBg = theme.headerBg;
 
   // Helper: check if we need a new page
   function ensureSpace(needed: number, currentY: number): number {
@@ -82,7 +84,7 @@ export function generateInvoicePDF(data: InvoiceData): jsPDF {
   y += 32;
   doc.setFontSize(32);
   doc.setFont("helvetica", "bold");
-  doc.setTextColor(dark);
+  doc.setTextColor(theme.primary);
   doc.text("INVOICE", rightEdge, y, { align: "right" });
 
   if (data.logo) y += 24;
@@ -189,7 +191,7 @@ export function generateInvoicePDF(data: InvoiceData): jsPDF {
     margin: { left: margin, right: margin },
     headStyles: {
       fillColor: headerBg,
-      textColor: "#ffffff",
+      textColor: theme.headerText,
       fontStyle: "bold",
       fontSize: 10,
       cellPadding: 8,

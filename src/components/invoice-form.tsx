@@ -18,10 +18,12 @@ import {
 import {
   InvoiceData,
   InvoiceItem,
+  InvoiceTheme,
   PaymentDetail,
   BankPayment,
   CryptoPayment,
   createDefaultInvoice,
+  INVOICE_THEMES,
 } from "@/lib/invoice-types";
 import { getPresetsForCurrency } from "@/lib/tax-presets";
 import { getBankFields } from "@/components/invoice/payment-form";
@@ -503,6 +505,60 @@ export function InvoiceForm() {
                     className="mt-1"
                   />
                 </div>
+              </div>
+              {/* Theme selector */}
+              <div>
+                <Label className="text-xs text-muted-foreground mb-2 block">Invoice Theme</Label>
+                <div className="flex flex-wrap gap-2">
+                  {Object.entries(INVOICE_THEMES).map(([key, t]) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => updateField("settings", { ...invoice.settings, themeName: key })}
+                      className={`flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs cursor-pointer transition-colors ${
+                        (invoice.settings.themeName || "classic") === key
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border text-muted-foreground hover:border-primary/50"
+                      }`}
+                    >
+                      <span className="size-3 rounded-full shrink-0" style={{ backgroundColor: t.headerBg }} />
+                      {key.charAt(0).toUpperCase() + key.slice(1)}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => updateField("settings", { ...invoice.settings, themeName: "custom" })}
+                    className={`flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs cursor-pointer transition-colors ${
+                      invoice.settings.themeName === "custom"
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border text-muted-foreground hover:border-primary/50"
+                    }`}
+                  >
+                    Custom
+                  </button>
+                </div>
+                {invoice.settings.themeName === "custom" && (
+                  <div className="grid grid-cols-5 gap-2 mt-3">
+                    {(["primary", "text", "muted", "headerBg", "headerText"] as const).map((field) => (
+                      <div key={field}>
+                        <Label className="text-[10px] text-muted-foreground">{field === "headerBg" ? "Header" : field === "headerText" ? "Header Text" : field.charAt(0).toUpperCase() + field.slice(1)}</Label>
+                        <input
+                          type="color"
+                          value={(invoice.settings.customTheme?.[field]) || INVOICE_THEMES.classic[field]}
+                          onChange={(e) => {
+                            const current: InvoiceTheme = invoice.settings.customTheme || { ...INVOICE_THEMES.classic };
+                            updateField("settings", {
+                              ...invoice.settings,
+                              themeName: "custom",
+                              customTheme: { ...current, [field]: e.target.value },
+                            });
+                          }}
+                          className="mt-1 w-full h-8 rounded border border-border cursor-pointer"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
               {/* Settings row */}
               <div className="flex items-center justify-between gap-4 pt-1">

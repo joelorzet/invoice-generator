@@ -49,8 +49,70 @@ export interface CryptoPayment {
 
 export type PaymentDetail = BankPayment | CryptoPayment;
 
+export interface InvoiceTheme {
+  primary: string;
+  text: string;
+  muted: string;
+  headerBg: string;
+  headerText: string;
+}
+
+export const INVOICE_THEMES: Record<string, InvoiceTheme> = {
+  classic: {
+    primary: "#1e293b",
+    text: "#1e293b",
+    muted: "#475569",
+    headerBg: "#4a4a4a",
+    headerText: "#ffffff",
+  },
+  ocean: {
+    primary: "#0369a1",
+    text: "#0c4a6e",
+    muted: "#64748b",
+    headerBg: "#0284c7",
+    headerText: "#ffffff",
+  },
+  forest: {
+    primary: "#166534",
+    text: "#14532d",
+    muted: "#4b5563",
+    headerBg: "#16a34a",
+    headerText: "#ffffff",
+  },
+  plum: {
+    primary: "#7e22ce",
+    text: "#581c87",
+    muted: "#6b7280",
+    headerBg: "#9333ea",
+    headerText: "#ffffff",
+  },
+  ember: {
+    primary: "#c2410c",
+    text: "#7c2d12",
+    muted: "#57534e",
+    headerBg: "#ea580c",
+    headerText: "#ffffff",
+  },
+  minimal: {
+    primary: "#374151",
+    text: "#374151",
+    muted: "#9ca3af",
+    headerBg: "#f3f4f6",
+    headerText: "#374151",
+  },
+};
+
+export function getInvoiceTheme(settings: InvoiceSettings): InvoiceTheme {
+  if (settings.themeName === "custom" && settings.customTheme) {
+    return settings.customTheme;
+  }
+  return INVOICE_THEMES[settings.themeName || "classic"] || INVOICE_THEMES.classic;
+}
+
 export interface InvoiceSettings {
   showAddressLabels: boolean;
+  themeName?: string;
+  customTheme?: InvoiceTheme;
 }
 
 export interface InvoiceData {

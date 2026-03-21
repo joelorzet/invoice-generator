@@ -8,6 +8,7 @@ import {
   calculateTotal,
   formatCurrency,
   formatDate,
+  getInvoiceTheme,
 } from "@/lib/invoice-types";
 import { AddressBlock } from "@/components/invoice/address-block";
 import { PaymentDetailsDisplay } from "@/components/invoice/payment-display";
@@ -18,6 +19,7 @@ export function InvoicePreview({ data }: { data: InvoiceData }) {
   const total = calculateTotal(data.items, data.tax.rate);
   const showLabels = data.settings.showAddressLabels;
   const hasItems = data.items.some((item) => item.description || item.rate > 0);
+  const theme = getInvoiceTheme(data.settings);
 
   const fromLines = buildAddressLines(data.from, showLabels);
   const billLines = buildAddressLines(data.bill_to, showLabels);
@@ -32,7 +34,7 @@ export function InvoicePreview({ data }: { data: InvoiceData }) {
         ) : (
           <div />
         )}
-        <h2 className="text-2xl font-bold text-gray-800 tracking-tight">
+        <h2 className="text-2xl font-bold tracking-tight" style={{ color: theme.primary }}>
           INVOICE
         </h2>
       </div>
@@ -47,19 +49,19 @@ export function InvoicePreview({ data }: { data: InvoiceData }) {
         <div className="text-right text-[10px] text-gray-500 space-y-0.5 shrink-0">
           {data.invoice_metadata.invoice_number && (
             <div className="flex justify-end gap-1.5">
-              <span className="font-semibold text-gray-700">Invoice #:</span>
+              <span className="font-semibold" style={{ color: theme.text }}>Invoice #:</span>
               <span>{data.invoice_metadata.invoice_number}</span>
             </div>
           )}
           {data.invoice_metadata.date && (
             <div className="flex justify-end gap-1.5">
-              <span className="font-semibold text-gray-700">Date:</span>
+              <span className="font-semibold" style={{ color: theme.text }}>Date:</span>
               <span>{formatDate(data.invoice_metadata.date)}</span>
             </div>
           )}
           {data.invoice_metadata.due_date && (
             <div className="flex justify-end gap-1.5">
-              <span className="font-semibold text-gray-700">Due:</span>
+              <span className="font-semibold" style={{ color: theme.text }}>Due:</span>
               <span>{formatDate(data.invoice_metadata.due_date)}</span>
             </div>
           )}
@@ -69,8 +71,8 @@ export function InvoicePreview({ data }: { data: InvoiceData }) {
       {/* Balance Due */}
       <div className="flex justify-end mb-4">
         <div className="bg-gray-50 border border-gray-200 rounded px-3 py-1.5 text-[10px]">
-          <span className="font-semibold text-gray-700">Balance Due: </span>
-          <span className="font-bold text-gray-900">
+          <span className="font-semibold" style={{ color: theme.text }}>Balance Due: </span>
+          <span className="font-bold" style={{ color: theme.primary }}>
             {formatCurrency(total, data.currency)}
           </span>
         </div>
@@ -79,7 +81,7 @@ export function InvoicePreview({ data }: { data: InvoiceData }) {
       {/* Items Table */}
       <table className="w-full text-[10px] mb-4">
         <thead>
-          <tr className="bg-gray-700 text-white">
+          <tr style={{ backgroundColor: theme.headerBg, color: theme.headerText }}>
             <th className="text-left py-1.5 px-2 font-semibold">Item</th>
             <th className="text-right py-1.5 px-2 font-semibold">Qty</th>
             <th className="text-right py-1.5 px-2 font-semibold">Rate</th>
@@ -92,16 +94,16 @@ export function InvoicePreview({ data }: { data: InvoiceData }) {
               .filter((item) => item.description || item.rate > 0)
               .map((item, i) => (
                 <tr key={i} className="border-b border-gray-100">
-                  <td className="py-1.5 px-2 text-gray-600">
+                  <td className="py-1.5 px-2" style={{ color: theme.muted }}>
                     {item.description || "Untitled"}
                   </td>
-                  <td className="py-1.5 px-2 text-right text-gray-600">
+                  <td className="py-1.5 px-2 text-right" style={{ color: theme.muted }}>
                     {item.quantity}
                   </td>
-                  <td className="py-1.5 px-2 text-right text-gray-600">
+                  <td className="py-1.5 px-2 text-right" style={{ color: theme.muted }}>
                     {formatCurrency(item.rate, data.currency)}
                   </td>
-                  <td className="py-1.5 px-2 text-right text-gray-600">
+                  <td className="py-1.5 px-2 text-right" style={{ color: theme.muted }}>
                     {formatCurrency(item.amount, data.currency)}
                   </td>
                 </tr>
@@ -120,16 +122,16 @@ export function InvoicePreview({ data }: { data: InvoiceData }) {
       <div className="flex justify-end mb-4">
         <div className="w-44 space-y-0.5 text-[10px]">
           <div className="flex justify-between">
-            <span className="font-semibold text-gray-700">Subtotal:</span>
+            <span className="font-semibold" style={{ color: theme.text }}>Subtotal:</span>
             <span>{formatCurrency(subtotal, data.currency)}</span>
           </div>
           <div className="flex justify-between">
-            <span className="font-semibold text-gray-700">
+            <span className="font-semibold" style={{ color: theme.text }}>
               {data.tax.description}:
             </span>
             <span>{formatCurrency(tax, data.currency)}</span>
           </div>
-          <div className="border-t border-gray-800 pt-0.5 flex justify-between font-bold text-gray-900">
+          <div className="pt-0.5 flex justify-between font-bold" style={{ borderTopColor: theme.text, borderTopWidth: 1, color: theme.primary }}>
             <span>Total:</span>
             <span>{formatCurrency(total, data.currency)}</span>
           </div>
@@ -141,8 +143,8 @@ export function InvoicePreview({ data }: { data: InvoiceData }) {
 
       {/* Notes */}
       {data.notes && (
-        <div className="text-[9px] text-gray-500">
-          <p className="font-semibold text-gray-700 mb-0.5">Notes:</p>
+        <div className="text-[9px]" style={{ color: theme.muted }}>
+          <p className="font-semibold mb-0.5" style={{ color: theme.text }}>Notes:</p>
           <p className="whitespace-pre-wrap">{data.notes}</p>
         </div>
       )}
