@@ -123,6 +123,7 @@ function SavedMethodSelector({
   renderLabel: (m: SavedPaymentMethod) => string;
 }) {
   const [open, setOpen] = useState(false);
+  const [selected, setSelected] = useState<string | null>(null);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -136,15 +137,26 @@ function SavedMethodSelector({
 
   if (methods.length === 0) return null;
 
+  const selectedMethod = selected ? methods.find((m) => m.id === selected) : null;
+
   return (
     <div ref={ref} className="relative">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center justify-between rounded-lg border border-input bg-transparent px-2.5 py-1.5 text-xs h-8 cursor-pointer text-muted-foreground hover:text-foreground transition-colors"
+        className={`flex w-full items-center justify-between rounded-lg border border-input bg-transparent px-2.5 py-1.5 text-xs h-8 cursor-pointer transition-colors ${selectedMethod ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}
       >
-        Load from saved...
-        <ChevronDown className="size-3.5" />
+        <span className="flex items-center gap-1.5 truncate">
+          {selectedMethod ? (
+            <>
+              {selectedMethod.type === "bank" ? <CreditCard className="size-3 shrink-0" /> : <Wallet className="size-3 shrink-0" />}
+              {renderLabel(selectedMethod)}
+            </>
+          ) : (
+            "Load from saved..."
+          )}
+        </span>
+        <ChevronDown className="size-3.5 shrink-0" />
       </button>
       {open && (
         <div className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-popover shadow-md overflow-hidden">
@@ -154,6 +166,7 @@ function SavedMethodSelector({
               type="button"
               onClick={() => {
                 onSelect(structuredClone(m.data));
+                setSelected(m.id);
                 setOpen(false);
               }}
               className="flex w-full items-center gap-2 px-2.5 py-1.5 text-xs text-popover-foreground hover:bg-accent cursor-pointer"
