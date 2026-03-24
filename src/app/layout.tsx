@@ -32,6 +32,12 @@ export const metadata: Metadata = {
     "invoice PDF download",
     "no signup invoice",
     "browser invoice generator",
+    "invoice generator crypto payment",
+    "privacy invoice maker",
+    "invoice generator no data stored",
+    "free invoice generator freelancer",
+    "generador de facturas gratis",
+    "invoice with VAT calculator",
   ],
   authors: [{ name: "Joel Orzet", url: "https://joelorzet.dev" }],
   creator: "Joel Orzet",
@@ -76,7 +82,7 @@ export const metadata: Metadata = {
     creator: "@joelorzet",
   },
   icons: {
-    icon: "/favicon.svg",
+    icon: "/favicon.ico",
   },
 };
 
@@ -111,7 +117,6 @@ export default function RootLayout({
         "https://x.com/joelorzet",
       ],
     },
-    aggregateRating: undefined,
   };
 
   return (
